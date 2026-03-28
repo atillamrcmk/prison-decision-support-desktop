@@ -1,0 +1,73 @@
+<UserControl x:Class="KKDS.Views.DisiplinFormView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+
+        <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock Text="{Binding FormBaslik}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,16"/>
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,10">
+                        <TextBlock Text="Mahkum Kodu" Style="{StaticResource LabelStyle}"/>
+                        <TextBox Text="{Binding MahkumKodu, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="0" Grid.Column="1" Margin="8,0,0,10">
+                        <TextBlock Text="Tarih" Style="{StaticResource LabelStyle}"/>
+                        <DatePicker SelectedDate="{Binding Tarih}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,10">
+                        <TextBlock Text="Olay Türü" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox ItemsSource="{Binding OlayTurleriListesi}" SelectedItem="{Binding OlayTuru}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.Column="1" Margin="8,0,0,10">
+                        <TextBlock Style="{StaticResource LabelStyle}"><Run Text="Şiddet: "/><Run Text="{Binding Siddet, Mode=OneWay}" FontWeight="Bold"/></TextBlock>
+                        <Slider Minimum="1" Maximum="5" Value="{Binding Siddet}" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,8,10">
+                        <TextBlock Text="Hedef" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox ItemsSource="{Binding HedeflerListesi}" SelectedItem="{Binding Hedef}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="2" Grid.Column="1" Margin="8,0,0,10">
+                        <TextBlock Text="Zaman Dilimi" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox ItemsSource="{Binding ZamanDilimleriListesi}" SelectedItem="{Binding ZamanDilimi}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Margin="0,0,0,10">
+                        <TextBlock Text="Açıklama" Style="{StaticResource LabelStyle}"/>
+                        <TextBox Text="{Binding Aciklama}" AcceptsReturn="True" TextWrapping="Wrap" Height="50"/>
+                    </StackPanel>
+                </Grid>
+                <TextBlock Text="{Binding Mesaj}" FontSize="12" Margin="0,4,0,8">
+                    <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{StaticResource SuccessBrush}"/>
+                        <Style.Triggers><DataTrigger Binding="{Binding MesajHata}" Value="True"><Setter Property="Foreground" Value="{StaticResource DangerBrush}"/></DataTrigger></Style.Triggers>
+                    </Style></TextBlock.Style>
+                </TextBlock>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Temizle" Command="{Binding TemizleCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,6,0"/>
+                    <Button Content="Sil" Command="{Binding SilCommand}" Style="{StaticResource DangerButton}" Margin="0,0,6,0" Visibility="{Binding DuzenleModu, Converter={StaticResource BoolToVis}}"/>
+                    <Button Content="Güncelle" Command="{Binding GuncelleCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,6,0" Visibility="{Binding DuzenleModu, Converter={StaticResource BoolToVis}}"/>
+                    <Button Content="Kaydet" Command="{Binding KaydetCommand}" Style="{StaticResource PrimaryButton}" Visibility="{Binding DuzenleModu, Converter={StaticResource InvBoolToVis}}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Border Style="{StaticResource CardBorder}" Grid.Row="1">
+            <StackPanel>
+                <TextBlock Text="Bu Mahkumun Olay Kayıtları" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <DataGrid ItemsSource="{Binding GecmisKayitlar}" MaxHeight="300" SelectionMode="Single"
+                          MouseDoubleClick="Grid_MouseDoubleClick">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Tarih" Binding="{Binding OlayTarihi, StringFormat=dd.MM.yyyy}"/>
+                        <DataGridTextColumn Header="Olay Türü" Binding="{Binding OlayTuru}"/>
+                        <DataGridTextColumn Header="Şiddet" Binding="{Binding Siddet}"/>
+                        <DataGridTextColumn Header="Hedef" Binding="{Binding Hedef}"/>
+                        <DataGridTextColumn Header="Zaman" Binding="{Binding ZamanDilimi}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

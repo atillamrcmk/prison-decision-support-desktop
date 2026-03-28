@@ -1,0 +1,29 @@
+<UserControl x:Class="KKDS.Views.MahkumAraView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel>
+        <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock Text="Mahkum Kodu veya Ad Soyad ile arama yapın" FontSize="12" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,8"/>
+                <TextBox Text="{Binding AramaMetni, UpdateSourceTrigger=PropertyChanged}" FontSize="14" Padding="10,8"/>
+            </StackPanel>
+        </Border>
+        <Border Style="{StaticResource CardBorder}">
+            <StackPanel>
+                <TextBlock FontSize="12" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,8">
+                    <Run Text="{Binding Sonuclar.Count, Mode=OneWay}" FontWeight="Bold"/><Run Text=" mahkum bulundu"/>
+                </TextBlock>
+                <DataGrid ItemsSource="{Binding Sonuclar}" MaxHeight="500">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Mahkum Kodu" Binding="{Binding MahkumKodu}"/>
+                        <DataGridTextColumn Header="Ad Soyad" Binding="{Binding AdSoyad}"/>
+                        <DataGridTextColumn Header="Blok" Binding="{Binding Blok}"/>
+                        <DataGridTextColumn Header="Koğuş" Binding="{Binding Kogus}"/>
+                        <DataGridTextColumn Header="Durum" Binding="{Binding Durum}"/>
+                        <DataGridTextColumn Header="Giriş Tarihi" Binding="{Binding KurumaGirisTarihi, StringFormat=dd.MM.yyyy}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

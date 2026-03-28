@@ -1,0 +1,35 @@
+<UserControl x:Class="KKDS.Views.TumKayitlarView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel>
+        <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock Text="Filtrele" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel Margin="0,0,12,0"><TextBlock Text="Arama" Style="{StaticResource LabelStyle}"/><TextBox Text="{Binding AramaMetni, UpdateSourceTrigger=PropertyChanged}" Width="160"/></StackPanel>
+                    <StackPanel Margin="0,0,12,0"><TextBlock Text="Kayıt Türü" Style="{StaticResource LabelStyle}"/><ComboBox ItemsSource="{Binding TurListesi}" SelectedItem="{Binding SeciliTur}" Width="120"/></StackPanel>
+                    <StackPanel Margin="0,0,12,0"><TextBlock Text="Başlangıç" Style="{StaticResource LabelStyle}"/><DatePicker SelectedDate="{Binding BaslangicTarihi}" Width="140"/></StackPanel>
+                    <StackPanel Margin="0,0,12,0"><TextBlock Text="Bitiş" Style="{StaticResource LabelStyle}"/><DatePicker SelectedDate="{Binding BitisTarihi}" Width="140"/></StackPanel>
+                    <Button Content="Temizle" Command="{Binding TemizleCommand}" Style="{StaticResource SecondaryButton}" VerticalAlignment="Bottom"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+        <Border Style="{StaticResource CardBorder}">
+            <StackPanel>
+                <TextBlock FontSize="12" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,8">
+                    <Run Text="{Binding Kayitlar.Count, Mode=OneWay}" FontWeight="Bold"/><Run Text=" kayıt listeleniyor"/>
+                </TextBlock>
+                <DataGrid ItemsSource="{Binding Kayitlar}" MaxHeight="550">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Tarih" Binding="{Binding OlusturmaZamani, StringFormat=dd.MM.yyyy HH:mm}"/>
+                        <DataGridTextColumn Header="Tür" Binding="{Binding KayitTuru}"/>
+                        <DataGridTextColumn Header="Mahkum" Binding="{Binding MahkumKodu}"/>
+                        <DataGridTextColumn Header="Kullanıcı" Binding="{Binding GirenKullanici}"/>
+                        <DataGridTextColumn Header="Rol" Binding="{Binding GirenRol}"/>
+                        <DataGridTextColumn Header="Özet" Binding="{Binding Ozet}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

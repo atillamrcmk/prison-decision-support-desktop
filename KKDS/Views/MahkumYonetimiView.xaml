@@ -1,0 +1,89 @@
+<UserControl x:Class="KKDS.Views.MahkumYonetimiView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+
+        <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock Text="{Binding FormBaslik}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,16"/>
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,10">
+                        <TextBlock Text="Mahkum Kodu (otomatik verilir)" Style="{StaticResource LabelStyle}"/>
+                        <TextBox Text="{Binding MahkumKodu, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="0" Grid.Column="1" Margin="8,0,0,10">
+                        <TextBlock Text="Ad Soyad" Style="{StaticResource LabelStyle}"/>
+                        <TextBox Text="{Binding AdSoyad, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,10">
+                        <TextBlock Text="Blok" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox ItemsSource="{Binding BlokListesi}" SelectedItem="{Binding Blok}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.Column="1" Margin="8,0,0,10">
+                        <TextBlock Text="Koğuş" Style="{StaticResource LabelStyle}"/>
+                        <TextBox Text="{Binding Kogus, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,8,10">
+                        <TextBlock Text="Kuruma Giriş Tarihi" Style="{StaticResource LabelStyle}"/>
+                        <DatePicker SelectedDate="{Binding GirisTarihi}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="2" Grid.Column="1" Margin="8,0,0,10">
+                        <TextBlock Text="Durum" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox ItemsSource="{Binding DurumListesi}" SelectedItem="{Binding Durum}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Margin="0,0,0,10">
+                        <TextBlock Text="Not" Style="{StaticResource LabelStyle}"/>
+                        <TextBox Text="{Binding Not}" AcceptsReturn="True" TextWrapping="Wrap" Height="50"/>
+                    </StackPanel>
+                </Grid>
+
+                <TextBlock Text="{Binding Mesaj}" FontSize="12" Margin="0,4,0,8">
+                    <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{StaticResource SuccessBrush}"/>
+                        <Style.Triggers><DataTrigger Binding="{Binding MesajHata}" Value="True"><Setter Property="Foreground" Value="{StaticResource DangerBrush}"/></DataTrigger></Style.Triggers>
+                    </Style></TextBlock.Style>
+                </TextBlock>
+
+                <DockPanel>
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                        <Button Content="Test Verisi Yükle" Command="{Binding TestYukleCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,6,0"/>
+                        <Button Content="Tüm Verileri Temizle" Command="{Binding TestTemizleCommand}" Style="{StaticResource DangerButton}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Temizle" Command="{Binding TemizleCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,6,0"/>
+                        <Button Content="Pasife Al" Command="{Binding PasifYapCommand}" Style="{StaticResource DangerButton}" Margin="0,0,6,0"
+                                Visibility="{Binding DuzenleModu, Converter={StaticResource BoolToVis}}"/>
+                        <Button Content="Güncelle" Command="{Binding GuncelleCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,6,0"
+                                Visibility="{Binding DuzenleModu, Converter={StaticResource BoolToVis}}"/>
+                        <Button Content="Kaydet" Command="{Binding KaydetCommand}" Style="{StaticResource PrimaryButton}"
+                                Visibility="{Binding DuzenleModu, Converter={StaticResource InvBoolToVis}}"/>
+                    </StackPanel>
+                </DockPanel>
+            </StackPanel>
+        </Border>
+
+        <Border Style="{StaticResource CardBorder}" Grid.Row="1">
+            <StackPanel>
+                <DockPanel Margin="0,0,0,8">
+                    <TextBlock Text="Mahkum Listesi" FontSize="13" FontWeight="SemiBold" DockPanel.Dock="Left"/>
+                    <TextBox Text="{Binding AramaMetni, UpdateSourceTrigger=PropertyChanged}" Width="200" DockPanel.Dock="Right" HorizontalAlignment="Right"/>
+                    <TextBlock Text="Ara:" FontSize="11" Foreground="{StaticResource TextMutedBrush}" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                </DockPanel>
+                <DataGrid ItemsSource="{Binding MahkumListesi}" MaxHeight="400" SelectionMode="Single"
+                          MouseDoubleClick="Grid_MouseDoubleClick">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Kod" Binding="{Binding MahkumKodu}"/>
+                        <DataGridTextColumn Header="Ad Soyad" Binding="{Binding AdSoyad}"/>
+                        <DataGridTextColumn Header="Blok" Binding="{Binding Blok}"/>
+                        <DataGridTextColumn Header="Koğuş" Binding="{Binding Kogus}"/>
+                        <DataGridTextColumn Header="Durum" Binding="{Binding Durum}"/>
+                        <DataGridTextColumn Header="Giriş" Binding="{Binding KurumaGirisTarihi, StringFormat=dd.MM.yyyy}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,108 @@
+<UserControl x:Class="KKDS.Views.PsikologFormView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Form -->
+        <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock Text="{Binding FormBaslik}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,16"/>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,10">
+                        <TextBlock Text="Mahkum Kodu" Style="{StaticResource LabelStyle}"/>
+                        <TextBox Text="{Binding MahkumKodu, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="0" Grid.Column="1" Margin="8,0,0,10">
+                        <TextBlock Text="Tarih" Style="{StaticResource LabelStyle}"/>
+                        <DatePicker SelectedDate="{Binding Tarih}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,10">
+                        <TextBlock Text="Ruh Hali" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox ItemsSource="{Binding RuhHalleriListesi}" SelectedItem="{Binding RuhHali}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.Column="1" Margin="8,0,0,10">
+                        <TextBlock Text="Önceki Duruma Göre" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox ItemsSource="{Binding OncekiDurumListesi}" SelectedItem="{Binding OncekiDurum}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,8,10">
+                        <TextBlock Style="{StaticResource LabelStyle}"><Run Text="Agresyon Düzeyi: "/><Run Text="{Binding Agresyon, Mode=OneWay}" FontWeight="Bold"/></TextBlock>
+                        <Slider Minimum="1" Maximum="5" Value="{Binding Agresyon}" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="2" Grid.Column="1" Margin="8,0,0,10">
+                        <TextBlock Style="{StaticResource LabelStyle}"><Run Text="Kendine Zarar Riski: "/><Run Text="{Binding KendineZarar, Mode=OneWay}" FontWeight="Bold"/></TextBlock>
+                        <Slider Minimum="1" Maximum="5" Value="{Binding KendineZarar}" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,0,8,10">
+                        <TextBlock Style="{StaticResource LabelStyle}"><Run Text="İş Birliği: "/><Run Text="{Binding Isbirligi, Mode=OneWay}" FontWeight="Bold"/></TextBlock>
+                        <Slider Minimum="1" Maximum="5" Value="{Binding Isbirligi}" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="3" Grid.Column="1" Margin="8,0,0,10">
+                        <TextBlock Text="Açıklama" Style="{StaticResource LabelStyle}"/>
+                        <TextBox Text="{Binding Aciklama}" AcceptsReturn="True" TextWrapping="Wrap" Height="60"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Message -->
+                <TextBlock Text="{Binding Mesaj}" FontSize="12" Margin="0,4,0,8">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{StaticResource SuccessBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding MesajHata}" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <!-- Buttons -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Temizle" Command="{Binding TemizleCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,6,0"/>
+                    <Button Content="Sil" Command="{Binding SilCommand}" Style="{StaticResource DangerButton}" Margin="0,0,6,0"
+                            Visibility="{Binding DuzenleModu, Converter={StaticResource BoolToVis}}"/>
+                    <Button Content="Güncelle" Command="{Binding GuncelleCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,6,0"
+                            Visibility="{Binding DuzenleModu, Converter={StaticResource BoolToVis}}"/>
+                    <Button Content="Kaydet" Command="{Binding KaydetCommand}" Style="{StaticResource PrimaryButton}"
+                            Visibility="{Binding DuzenleModu, Converter={StaticResource InvBoolToVis}}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- History -->
+        <Border Style="{StaticResource CardBorder}" Grid.Row="1">
+            <StackPanel>
+                <TextBlock Text="Bu Mahkumun Geçmiş Değerlendirmeleri" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock Text="Mahkum kodunu girerek geçmiş kayıtları görüntüleyin." FontSize="11" Foreground="{StaticResource TextMutedBrush}"
+                           Visibility="{Binding GecmisKayitlar.Count, Converter={StaticResource ZeroToVis}}"/>
+                <DataGrid ItemsSource="{Binding GecmisKayitlar}" MaxHeight="300" SelectionMode="Single"
+                          MouseDoubleClick="GecmisKayitlar_MouseDoubleClick">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Tarih" Binding="{Binding DegerlendirmeTarihi, StringFormat=dd.MM.yyyy}"/>
+                        <DataGridTextColumn Header="Ruh Hali" Binding="{Binding RuhHali}"/>
+                        <DataGridTextColumn Header="Agresyon" Binding="{Binding AgresyonDuzeyi}"/>
+                        <DataGridTextColumn Header="Zarar Riski" Binding="{Binding KendineZararRiski}"/>
+                        <DataGridTextColumn Header="İşbirliği" Binding="{Binding Isbirligi}"/>
+                        <DataGridTextColumn Header="Değişim" Binding="{Binding OncekiDurumaGore}"/>
+                        <DataGridTextColumn Header="Açıklama" Binding="{Binding Aciklama}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

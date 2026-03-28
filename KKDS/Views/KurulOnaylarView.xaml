@@ -1,0 +1,174 @@
+<UserControl x:Class="KKDS.Views.KurulOnaylarView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="360"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Sol: Karar Listesi -->
+            <Border Style="{StaticResource CardBorder}" Grid.Column="0" Margin="0,0,8,0">
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,10">
+                        <TextBlock Text="Kurul Kararları" FontSize="14" FontWeight="SemiBold" DockPanel.Dock="Left" VerticalAlignment="Center"/>
+                        <ComboBox ItemsSource="{Binding FiltreListesi}" SelectedItem="{Binding Filtre}" Width="140" DockPanel.Dock="Right" HorizontalAlignment="Right"/>
+                    </DockPanel>
+
+                    <TextBlock FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,8">
+                        <Run Text="{Binding Kararlar.Count, Mode=OneWay}" FontWeight="Bold"/>
+                        <Run Text=" karar listeleniyor. Detay görmek için bir karara tıklayın."/>
+                    </TextBlock>
+
+                    <DataGrid ItemsSource="{Binding Kararlar}" MaxHeight="500" SelectionMode="Single"
+                              MouseLeftButtonUp="Kararlar_MouseLeftButtonUp">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Tarih" Binding="{Binding KararTarihi, StringFormat=dd.MM.yyyy}"/>
+                            <DataGridTextColumn Header="Mahkum" Binding="{Binding MahkumKodu}"/>
+                            <DataGridTextColumn Header="Ad" Binding="{Binding MahkumAd}"/>
+                            <DataGridTextColumn Header="Karar" Binding="{Binding KararTuru}"/>
+                            <DataGridTextColumn Header="Süre" Binding="{Binding SureGun}"/>
+                            <DataGridTextColumn Header="Durum" Binding="{Binding OnayDurumuMetin}"/>
+                            <DataGridTextColumn Header="Onay" Binding="{Binding OnayOzet}"/>
+                        </DataGrid.Columns>
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding BenOnayBekliyor}" Value="True">
+                                        <Setter Property="Background" Value="#FFF3E0"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+
+            <!-- Sağ: Seçili Karar Detayı ve Onay Paneli -->
+            <Border Style="{StaticResource CardBorder}" Grid.Column="1">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- Karar seçilmediğinde -->
+                        <TextBlock Text="Detay görmek ve onay vermek için sol listeden bir karar seçin."
+                                   FontSize="12" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap"
+                                   Visibility="{Binding KararSecili, Converter={StaticResource InvBoolToVis}}"/>
+
+                        <!-- Karar seçildiğinde -->
+                        <StackPanel Visibility="{Binding KararSecili, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="Karar Detayı" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,12"/>
+
+                            <!-- Mahkum & Karar Bilgileri -->
+                            <Border Background="#F9FAFB" CornerRadius="6" Padding="12" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock FontSize="12" Margin="0,0,0,4">
+                                        <Run Text="Mahkum: " FontWeight="SemiBold"/>
+                                        <Run Text="{Binding SeciliKarar.MahkumKodu, Mode=OneWay}"/>
+                                        <Run Text=" — "/>
+                                        <Run Text="{Binding SeciliKarar.MahkumAd, Mode=OneWay}"/>
+                                    </TextBlock>
+                                    <TextBlock FontSize="12" Margin="0,0,0,4">
+                                        <Run Text="Karar: " FontWeight="SemiBold"/>
+                                        <Run Text="{Binding SeciliKarar.KararTuru, Mode=OneWay}"/>
+                                    </TextBlock>
+                                    <TextBlock FontSize="12" Margin="0,0,0,4">
+                                        <Run Text="Süre: " FontWeight="SemiBold"/>
+                                        <Run Text="{Binding SeciliKarar.SureGun, Mode=OneWay}"/>
+                                        <Run Text=" gün"/>
+                                    </TextBlock>
+                                    <TextBlock FontSize="12" Margin="0,0,0,4">
+                                        <Run Text="Tarih: " FontWeight="SemiBold"/>
+                                        <Run Text="{Binding SeciliKarar.KararTarihi, Mode=OneWay, StringFormat=dd.MM.yyyy}"/>
+                                    </TextBlock>
+                                    <TextBlock FontSize="12" Margin="0,0,0,4">
+                                        <Run Text="Oluşturan: " FontWeight="SemiBold"/>
+                                        <Run Text="{Binding SeciliKarar.OlusturanKullanici, Mode=OneWay}"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Gerekçe -->
+                            <TextBlock Text="Gerekçe" Style="{StaticResource LabelStyle}"/>
+                            <TextBlock Text="{Binding SeciliKarar.KisaGerekce, Mode=OneWay}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                            <TextBlock Text="{Binding SeciliKarar.DetayliGerekce, Mode=OneWay}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                            <!-- Onay Durumları -->
+                            <TextBlock Text="Onay Durumları" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+
+                            <Border Background="#F9FAFB" CornerRadius="6" Padding="10" Margin="0,0,0,4">
+                                <StackPanel>
+                                    <TextBlock FontSize="12" Margin="0,0,0,2">
+                                        <Run Text="Psikolog: " FontWeight="SemiBold"/>
+                                        <Run Text="{Binding SeciliKarar.PsikologDurum, Mode=OneWay}"/>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding SeciliKarar.PsikologYorum, Mode=OneWay}" FontSize="10" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+
+                                    <TextBlock FontSize="12" Margin="0,0,0,2">
+                                        <Run Text="Revir: " FontWeight="SemiBold"/>
+                                        <Run Text="{Binding SeciliKarar.RevirDurum, Mode=OneWay}"/>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding SeciliKarar.RevirYorum, Mode=OneWay}" FontSize="10" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+
+                                    <TextBlock FontSize="12" Margin="0,0,0,2">
+                                        <Run Text="Disiplin: " FontWeight="SemiBold"/>
+                                        <Run Text="{Binding SeciliKarar.DisiplinDurum, Mode=OneWay}"/>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding SeciliKarar.DisiplinYorum, Mode=OneWay}" FontSize="10" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Genel Durum -->
+                            <Border Margin="0,8,0,12" Padding="8" CornerRadius="4" Background="#EBF5FF">
+                                <TextBlock FontSize="12" TextWrapping="Wrap" HorizontalAlignment="Center">
+                                    <Run Text="Genel Durum: " FontWeight="Bold"/>
+                                    <Run Text="{Binding SeciliKarar.OnayDurumuMetin, Mode=OneWay}"/>
+                                    <Run Text=" ("/>
+                                    <Run Text="{Binding SeciliKarar.OnayOzet, Mode=OneWay}"/>
+                                    <Run Text=" onay)"/>
+                                </TextBlock>
+                            </Border>
+
+                            <!-- Onay/Red Paneli -->
+                            <StackPanel Visibility="{Binding SeciliKarar.BenOnayBekliyor, Converter={StaticResource BoolToVis}}">
+                                <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,0,0,12"/>
+                                <TextBlock Text="Onay / Red İşlemi" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <TextBlock Text="Yorum / Gerekçe" Style="{StaticResource LabelStyle}"/>
+                                <TextBox Text="{Binding OnayYorum, UpdateSourceTrigger=PropertyChanged}" Height="60" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Content="Reddet" Command="{Binding ReddetCommand}" Style="{StaticResource DangerButton}" Margin="0,0,8,0"/>
+                                    <Button Content="Onayla" Command="{Binding OnaylaCommand}" Style="{StaticResource PrimaryButton}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Zaten onay verilmiş -->
+                            <Border Visibility="{Binding SeciliKarar.BenOnayVermis, Converter={StaticResource BoolToVis}}"
+                                    Background="#E8F5E9" CornerRadius="4" Padding="10" Margin="0,8,0,0">
+                                <TextBlock Text="Bu karar için görüşünüzü zaten bildirdiniz." FontSize="11" Foreground="#2E7D32" HorizontalAlignment="Center"/>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <!-- Alt: Mesaj -->
+        <TextBlock Grid.Row="1" Text="{Binding Mesaj}" FontSize="12" Margin="4,8,0,0">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Setter Property="Foreground" Value="{StaticResource SuccessBrush}"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding MesajHata}" Value="True">
+                            <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+    </Grid>
+</UserControl>
