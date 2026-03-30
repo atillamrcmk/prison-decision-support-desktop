@@ -29,6 +29,45 @@ namespace KKDS.ViewModels
         public string EnTehlikeliOruntu { get; set; } = "-";
 
         public ObservableCollection<HaftalikTrend> HaftalikTrendler { get; set; } = new();
+        public ObservableCollection<TrendPeriyotOgesi> TrendPeriyotSecenekleri { get; } = new()
+        {
+            new TrendPeriyotOgesi { Deger = OlayTrendPeriyot.Gunluk, Ad = "Günlük (8 gün)" },
+            new TrendPeriyotOgesi { Deger = OlayTrendPeriyot.Haftalik, Ad = "Haftalık (8 hafta)" },
+            new TrendPeriyotOgesi { Deger = OlayTrendPeriyot.Aylik, Ad = "Aylık (8 ay)" }
+        };
+
+        private OlayTrendPeriyot _trendPeriyot = OlayTrendPeriyot.Haftalik;
+        private List<Olay> _olaylarTrendIcin = new();
+
+        /// <summary>Panoda trend grafiği için günlük / haftalık / aylık seçim.</summary>
+        public OlayTrendPeriyot TrendPeriyot
+        {
+            get => _trendPeriyot;
+            set
+            {
+                if (SetProperty(ref _trendPeriyot, value))
+                {
+                    OnPropertyChanged(nameof(TrendGrafikBaslik));
+                    OnPropertyChanged(nameof(TrendGrafikAciklama));
+                    GuncelleTrendSerisi();
+                }
+            }
+        }
+
+        public string TrendGrafikBaslik => TrendPeriyot switch
+        {
+            OlayTrendPeriyot.Gunluk => "Günlük olay trendi",
+            OlayTrendPeriyot.Aylik => "Aylık olay trendi",
+            _ => "Haftalık olay trendi"
+        };
+
+        public string TrendGrafikAciklama => TrendPeriyot switch
+        {
+            OlayTrendPeriyot.Gunluk => "Her sütun bir takvim gününün toplam olay sayısıdır (eksende o günün tarihi). Çubuklar ortak taban çizgisinde hizalanır.",
+            OlayTrendPeriyot.Aylik => "Her sütun bir takvim ayının toplam olay sayısıdır (eksende ay ve yıl). Çubuklar ortak taban çizgisinde hizalanır.",
+            _ => "Her sütun 7 günlük dilimin toplam olay sayısıdır (eksende haftanın başlangıç–bitiş tarihleri). Çubuklar ortak taban çizgisinde hizalanır."
+        };
+
         public ObservableCollection<GlobalKararEtki> KararEtkileri { get; set; } = new();
         public ObservableCollection<MahkumOzetSatir> EnProblemliMahkumlar { get; set; } = new();
         public ObservableCollection<MahkumOzetSatir> HizliKotulesenler { get; set; } = new();
@@ -56,6 +95,7 @@ namespace KKDS.ViewModels
             YakinIzlemSayisi = veri.Mahkumlar.Count(m => m.Durum == "yakin_izlem");
 
             var tumOlaylar = veri.Olaylar.ToList();
+            _olaylarTrendIcin = tumOlaylar;
 
             // En yoğun zaman dilimi
             if (tumOlaylar.Any())
@@ -71,9 +111,8 @@ namespace KKDS.ViewModels
                     .First().Key;
             }
 
-            // Haftalık global trend
-            var globalTrend = analiz.HaftalikTrendHesapla(tumOlaylar.OrderByDescending(o => o.OlayTarihi).ToList());
-            foreach (var t in globalTrend) HaftalikTrendler.Add(t);
+            // Trend grafiği (varsayılan haftalık; TrendPeriyot değişince güncellenir)
+            GuncelleTrendSerisi();
 
             // Global karar etki
             var kararEtki = analiz.GlobalKararEtkiHesapla();
@@ -168,6 +207,14 @@ namespace KKDS.ViewModels
                     MahkumId = o.MahkumId
                 });
             }
+        }
+
+        private void GuncelleTrendSerisi()
+        {
+            HaftalikTrendler.Clear();
+            var analiz = AnalizServisi.Instance;
+            foreach (var t in analiz.OlayTrendSerisiHesapla(_olaylarTrendIcin, TrendPeriyot))
+                HaftalikTrendler.Add(t);
         }
 
         private void DetayGoster(object? param)

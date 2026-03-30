@@ -28,15 +28,19 @@
                                    Foreground="{Binding Analiz.Egilim, Converter={StaticResource EgilimRenk}}"/>
                     </StackPanel>
                 </StackPanel>
-                <!-- Risk Score Badge -->
-                <Border Grid.Column="1" CornerRadius="8" Padding="16,8" VerticalAlignment="Center"
-                        Background="{Binding Risk.Seviye, Converter={StaticResource RiskRenk}}">
-                    <StackPanel HorizontalAlignment="Center">
-                        <TextBlock Text="{Binding Risk.ToplamSkor, StringFormat=F0}" FontSize="28" FontWeight="Bold"
-                                   Foreground="White" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding Risk.Seviye}" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
-                    </StackPanel>
-                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right">
+                    <Border CornerRadius="8" Padding="16,8"
+                            Background="{Binding Risk.Seviye, Converter={StaticResource RiskRenk}}">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding Risk.ToplamSkor, StringFormat=F0}" FontSize="28" FontWeight="Bold"
+                                       Foreground="White" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding Risk.Seviye}" FontSize="11" Foreground="White" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                    <Button Content="Detayı PDF olarak dışa aktar" Command="{Binding DisaAktarPdfCommand}"
+                            Style="{StaticResource SecondaryButton}" Margin="0,10,0,0" HorizontalAlignment="Stretch"
+                            ToolTip="Önemli veriler A4 PDF olarak kaydedilir."/>
+                </StackPanel>
             </Grid>
         </Border>
 
@@ -303,32 +307,79 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Weekly Trend -->
-            <Border Style="{StaticResource CardBorder}" Grid.Column="0">
-                <StackPanel>
-                    <TextBlock Text="Haftalık Olay Trendi" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,12"/>
-                    <ItemsControl ItemsSource="{Binding HaftalikTrendler}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <UniformGrid Columns="8" Rows="1"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="2">
-                                    <TextBlock Text="{Binding OlaySayisi}" FontSize="10" HorizontalAlignment="Center" FontWeight="SemiBold"/>
-                                    <Border Width="24" Background="{StaticResource AccentBrush}" CornerRadius="3,3,0,0"
-                                            Height="{Binding OlaySayisi, Converter={StaticResource BarHeight}, ConverterParameter=10}" MinHeight="4" MaxHeight="80" Margin="0,2,0,0"/>
-                                    <TextBlock Text="{Binding Hafta}" FontSize="9" HorizontalAlignment="Center" Foreground="{StaticResource TextMutedBrush}" Margin="0,4,0,0"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+            <!-- Olay trendi -->
+            <Border Style="{StaticResource CardBorder}" Grid.Column="0" VerticalAlignment="Top">
+                <StackPanel VerticalAlignment="Top">
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding TrendGrafikBaslik}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                        <ComboBox Grid.Column="1" MinWidth="190" Margin="10,0,0,0" VerticalAlignment="Center"
+                                  ItemsSource="{Binding TrendPeriyotSecenekleri}"
+                                  DisplayMemberPath="Ad"
+                                  SelectedValuePath="Deger"
+                                  SelectedValue="{Binding TrendPeriyot, Mode=TwoWay}"/>
+                    </Grid>
+                    <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,10"
+                               Text="{Binding TrendGrafikAciklama}"/>
+                    <Border Background="#F8FAFC" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1" Padding="10,10,10,8">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="112"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="0" Height="112">
+                                <Grid Margin="0,4,0,0" VerticalAlignment="Stretch">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/><RowDefinition Height="*"/><RowDefinition Height="*"/><RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <Border Grid.Row="0" BorderBrush="#E8EDF4" BorderThickness="0,0,0,1"/>
+                                    <Border Grid.Row="1" BorderBrush="#E8EDF4" BorderThickness="0,0,0,1"/>
+                                    <Border Grid.Row="2" BorderBrush="#E8EDF4" BorderThickness="0,0,0,1"/>
+                                    <Border Grid.Row="3" BorderBrush="#E8EDF4" BorderThickness="0,0,0,1"/>
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding HaftalikTrendler}" VerticalAlignment="Bottom" Margin="4,0,4,0">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid Columns="8" Rows="1"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="3,0">
+                                                <TextBlock Text="{Binding OlaySayisi}" FontSize="10" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                                                <Border Width="26" CornerRadius="4,4,0,0" Margin="0,4,0,0"
+                                                        Background="{Binding CubukRenkHex, Converter={StaticResource HexToBrush}}"
+                                                        Height="{Binding OlaySayisi, Converter={StaticResource BarHeight}, ConverterParameter=8}" MinHeight="4" MaxHeight="76"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Grid>
+                            <Border Grid.Row="1" Height="2" Background="#475569" CornerRadius="1" Margin="0,4,0,0"/>
+                            <ItemsControl Grid.Row="2" ItemsSource="{Binding HaftalikTrendler}" Margin="0,6,0,0">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="8" Rows="1"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Hafta}" FontSize="7" HorizontalAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"
+                                                   TextWrapping="Wrap" TextAlignment="Center" MaxWidth="100"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </Border>
                 </StackPanel>
             </Border>
 
             <!-- Event Type Distribution -->
-            <Border Style="{StaticResource CardBorder}" Grid.Column="1">
+            <Border Style="{StaticResource CardBorder}" Grid.Column="1" VerticalAlignment="Top">
                 <StackPanel>
                     <TextBlock Text="Olay Türü Dağılımı" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,12"/>
                     <ItemsControl ItemsSource="{Binding OlayTurDagilimi}">

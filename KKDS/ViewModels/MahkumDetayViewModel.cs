@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 using KKDS.Helpers;
 using KKDS.Models;
 using KKDS.Services;
+using Microsoft.Win32;
 
 namespace KKDS.ViewModels
 {
@@ -25,6 +28,43 @@ namespace KKDS.ViewModels
         }
 
         public ObservableCollection<HaftalikTrend> HaftalikTrendler { get; } = new();
+        public ObservableCollection<TrendPeriyotOgesi> TrendPeriyotSecenekleri { get; } = new()
+        {
+            new TrendPeriyotOgesi { Deger = OlayTrendPeriyot.Gunluk, Ad = "Günlük (8 gün)" },
+            new TrendPeriyotOgesi { Deger = OlayTrendPeriyot.Haftalik, Ad = "Haftalık (8 hafta)" },
+            new TrendPeriyotOgesi { Deger = OlayTrendPeriyot.Aylik, Ad = "Aylık (8 ay)" }
+        };
+
+        private OlayTrendPeriyot _trendPeriyot = OlayTrendPeriyot.Haftalik;
+        private List<Olay> _mahkumOlaylariCache = new();
+
+        public OlayTrendPeriyot TrendPeriyot
+        {
+            get => _trendPeriyot;
+            set
+            {
+                if (SetProperty(ref _trendPeriyot, value))
+                {
+                    OnPropertyChanged(nameof(TrendGrafikBaslik));
+                    OnPropertyChanged(nameof(TrendGrafikAciklama));
+                    GuncelleTrendSerisi();
+                }
+            }
+        }
+
+        public string TrendGrafikBaslik => TrendPeriyot switch
+        {
+            OlayTrendPeriyot.Gunluk => "Günlük olay trendi",
+            OlayTrendPeriyot.Aylik => "Aylık olay trendi",
+            _ => "Haftalık olay trendi"
+        };
+
+        public string TrendGrafikAciklama => TrendPeriyot switch
+        {
+            OlayTrendPeriyot.Gunluk => "Her sütun bir günün olay sayısı; eksende ilgili günün tarihi (gg.aa.yyyy).",
+            OlayTrendPeriyot.Aylik => "Her sütun bir ayın olay sayısı; eksende ay adı ve yıl.",
+            _ => "Her sütun 7 günlük dilimin olay sayısı; eksende haftanın başlangıç–bitiş tarihleri."
+        };
         public ObservableCollection<OlayTurDagilim> OlayTurDagilimi { get; } = new();
         public ObservableCollection<Olay> Olaylar { get; } = new();
         public ObservableCollection<PsikologDegerlendirme> PsikologKayitlari { get; } = new();
@@ -39,6 +79,7 @@ namespace KKDS.ViewModels
 
         public ICommand GeriCommand { get; }
         public ICommand SekmeCommand { get; }
+        public ICommand DisaAktarPdfCommand { get; }
 
         public MahkumDetayViewModel(int mahkumId, MainViewModel main)
         {
@@ -49,8 +90,40 @@ namespace KKDS.ViewModels
                 if (p is string s && int.TryParse(s, out int idx))
                     SeciliSekme = idx;
             });
+            DisaAktarPdfCommand = new RelayCommand(_ => DisaAktarPdf());
 
             Yukle(mahkumId);
+        }
+
+        private void DisaAktarPdf()
+        {
+            var dlg = new SaveFileDialog
+            {
+                Filter = "PDF (*.pdf)|*.pdf",
+                DefaultExt = ".pdf",
+                FileName = $"Mahkum_{Mahkum.MahkumKodu}_{DateTime.Now:yyyyMMdd_HHmm}.pdf"
+            };
+            if (dlg.ShowDialog() != true) return;
+            try
+            {
+                var veri = new MahkumDetayPdfVeri
+                {
+                    Mahkum = Mahkum,
+                    Analiz = Analiz,
+                    Tahmin = Tahmin,
+                    Risk = Risk,
+                    HaftalikTrend = Analiz.HaftalikTrendler.ToList(),
+                    OlayTurDagilimi = OlayTurDagilimi.Select(x => new OlayTurDagilimSatir { Tur = x.Tur, Sayi = x.Sayi }).ToList(),
+                    SistemOzeti = Analiz.SistemOzeti ?? new List<string>(),
+                    Olaylar = Olaylar.OrderByDescending(o => o.OlayTarihi).ToList()
+                };
+                MahkumDetayPdfServisi.Olustur(dlg.FileName, veri);
+                MessageBox.Show($"PDF kaydedildi:\n{dlg.FileName}", "Dışa aktar", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"PDF oluşturulamadı:\n{ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void Yukle(int mahkumId)
@@ -65,12 +138,11 @@ namespace KKDS.ViewModels
             Tahmin = tahminServisi.YediGunlukTahmin(mahkumId);
             Risk = riskServisi.RiskSkoruHesapla(mahkumId);
 
-            // Haftalık trendler
-            foreach (var t in Analiz.HaftalikTrendler)
-                HaftalikTrendler.Add(t);
+            var olaylar = veri.MahkumOlaylari(mahkumId);
+            _mahkumOlaylariCache = olaylar;
+            GuncelleTrendSerisi();
 
             // Olay türü dağılımı
-            var olaylar = veri.MahkumOlaylari(mahkumId);
             var gruplar = olaylar.GroupBy(o => o.OlayTuru).OrderByDescending(g => g.Count());
             foreach (var g in gruplar)
                 OlayTurDagilimi.Add(new OlayTurDagilim { Tur = g.Key, Sayi = g.Count() });
@@ -95,6 +167,13 @@ namespace KKDS.ViewModels
             RevirDurum = sonRevir != null
                 ? $"Uyku: {sonRevir.UykuDurumu}, Stres: {sonRevir.StresSeviyesi}/5"
                 : "Kayıt yok";
+        }
+
+        private void GuncelleTrendSerisi()
+        {
+            HaftalikTrendler.Clear();
+            foreach (var t in AnalizServisi.Instance.OlayTrendSerisiHesapla(_mahkumOlaylariCache, TrendPeriyot))
+                HaftalikTrendler.Add(t);
         }
     }
 

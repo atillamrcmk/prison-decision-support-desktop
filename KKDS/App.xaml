@@ -16,6 +16,7 @@
             <conv:NullToVisibilityConverter x:Key="NullToVis"/>
             <conv:ZeroToVisibilityConverter x:Key="ZeroToVis"/>
             <conv:BarHeightConverter x:Key="BarHeight"/>
+            <conv:HexToBrushConverter x:Key="HexToBrush"/>
 
             <!-- View-ViewModel Mappings -->
             <DataTemplate DataType="{x:Type vm:LoginViewModel}"><views:LoginView/></DataTemplate>

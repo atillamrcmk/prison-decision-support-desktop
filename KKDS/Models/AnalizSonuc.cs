@@ -20,6 +20,8 @@ namespace KKDS.Models
     {
         public string Hafta { get; set; } = string.Empty;
         public int OlaySayisi { get; set; }
+        /// <summary>Çubuk rengi (#RRGGBB). Haftaya göre paletten atanır.</summary>
+        public string CubukRenkHex { get; set; } = "#3B82F6";
     }
 
     public class OruntuAnalizi

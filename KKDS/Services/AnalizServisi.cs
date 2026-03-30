@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using KKDS.Models;
 
@@ -11,6 +12,25 @@ namespace KKDS.Services
         public static AnalizServisi Instance => _instance.Value;
 
         private readonly VeriDepolamaServisi _veri = VeriDepolamaServisi.Instance;
+
+        private static readonly string[] CubukRenkPaleti =
+        {
+            "#2563EB", "#7C3AED", "#DB2777", "#EA580C",
+            "#CA8A04", "#059669", "#0D9488", "#4F46E5"
+        };
+
+        private static string CubukRengi(int sira) => CubukRenkPaleti[sira % CubukRenkPaleti.Length];
+
+        private static readonly CultureInfo Tr = CultureInfo.GetCultureInfo("tr-TR");
+
+        /// <summary>Haftalık dilim [bas, sonUstHaric) için eksen etiketi (gerçek tarihler).</summary>
+        private static string HaftaAraligiEtiketi(DateTime bas, DateTime sonUstHaric)
+        {
+            var son = sonUstHaric.Date.AddDays(-1);
+            if (bas.Year == son.Year)
+                return $"{bas.ToString("dd.MM", Tr)} – {son.ToString("dd.MM.yyyy", Tr)}";
+            return $"{bas:dd.MM.yyyy} – {son:dd.MM.yyyy}";
+        }
 
         public AnalizSonuc TamAnaliz(int mahkumId)
         {
@@ -35,21 +55,74 @@ namespace KKDS.Services
             return sonuc;
         }
 
-        #region Haftalik Trend
+        #region Olay trend serisi (günlük / haftalık / aylık)
+        /// <summary>Seçilen periyoda göre son 8 dilimin olay sayıları (etiket + renk).</summary>
+        public List<HaftalikTrend> OlayTrendSerisiHesapla(List<Olay> olaylar, OlayTrendPeriyot periyot) =>
+            periyot switch
+            {
+                OlayTrendPeriyot.Gunluk => GunlukTrendHesapla(olaylar),
+                OlayTrendPeriyot.Aylik => AylikTrendHesapla(olaylar),
+                _ => HaftalikTrendHesapla(olaylar)
+            };
+
+        /// <summary>Son 8 gün; eksen etiketi ilgili takvim günü (dd.MM.yyyy).</summary>
+        public List<HaftalikTrend> GunlukTrendHesapla(List<Olay> olaylar)
+        {
+            var bugun = DateTime.Today;
+            var trendler = new List<HaftalikTrend>();
+            for (int k = 1; k <= 8; k++)
+            {
+                var gunBasi = bugun.AddDays(-8 + k).Date;
+                var gunSonu = gunBasi.AddDays(1);
+                var sayi = olaylar.Count(o => o.OlayTarihi >= gunBasi && o.OlayTarihi < gunSonu);
+                trendler.Add(new HaftalikTrend
+                {
+                    Hafta = gunBasi.ToString("dd.MM.yyyy", Tr),
+                    OlaySayisi = sayi,
+                    CubukRenkHex = CubukRengi(k - 1)
+                });
+            }
+            return trendler;
+        }
+
         public List<HaftalikTrend> HaftalikTrendHesapla(List<Olay> olaylar)
         {
             var bugun = DateTime.Today;
             var trendler = new List<HaftalikTrend>();
-
             for (int i = 7; i >= 0; i--)
             {
                 var haftaBasi = bugun.AddDays(-7 * (i + 1));
                 var haftaSonu = bugun.AddDays(-7 * i);
                 var sayi = olaylar.Count(o => o.OlayTarihi >= haftaBasi && o.OlayTarihi < haftaSonu);
+                var idx = 8 - i - 1;
                 trendler.Add(new HaftalikTrend
                 {
-                    Hafta = $"H{8 - i}",
-                    OlaySayisi = sayi
+                    Hafta = HaftaAraligiEtiketi(haftaBasi.Date, haftaSonu),
+                    OlaySayisi = sayi,
+                    CubukRenkHex = CubukRengi(idx)
+                });
+            }
+            return trendler;
+        }
+
+        /// <summary>Son 8 ay; eksen etiketi ay adı + yıl (ör. Mart 2026).</summary>
+        public List<HaftalikTrend> AylikTrendHesapla(List<Olay> olaylar)
+        {
+            var bugun = DateTime.Today;
+            var trendler = new List<HaftalikTrend>();
+            for (int k = 0; k < 8; k++)
+            {
+                var ayBasi = new DateTime(bugun.Year, bugun.Month, 1).AddMonths(-(7 - k));
+                var aySonu = ayBasi.AddMonths(1);
+                var sayi = olaylar.Count(o => o.OlayTarihi >= ayBasi && o.OlayTarihi < aySonu);
+                var etiket = ayBasi.ToString("MMMM yyyy", Tr);
+                if (etiket.Length > 0)
+                    etiket = char.ToUpper(etiket[0], Tr) + etiket.Substring(1);
+                trendler.Add(new HaftalikTrend
+                {
+                    Hafta = etiket,
+                    OlaySayisi = sayi,
+                    CubukRenkHex = CubukRengi(k)
                 });
             }
             return trendler;

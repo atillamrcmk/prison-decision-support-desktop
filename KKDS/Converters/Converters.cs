@@ -111,4 +111,28 @@ namespace KKDS.Converters
         public object ConvertBack(object value, Type t, object p, CultureInfo c) =>
             throw new NotImplementedException();
     }
+
+    /// <summary>#RRGGBB veya named color → SolidColorBrush (grafik çubukları için).</summary>
+    public class HexToBrushConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is string hex && !string.IsNullOrWhiteSpace(hex))
+            {
+                try
+                {
+                    var color = (Color)ColorConverter.ConvertFromString(hex.Trim());
+                    return new SolidColorBrush(color);
+                }
+                catch
+                {
+                    /* default */
+                }
+            }
+            return new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6));
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+            throw new NotImplementedException();
+    }
 }
