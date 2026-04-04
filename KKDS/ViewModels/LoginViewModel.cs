@@ -27,11 +27,26 @@ namespace KKDS.ViewModels
         private void GirisYap()
         {
             if (string.IsNullOrWhiteSpace(KullaniciAdi) || string.IsNullOrWhiteSpace(Sifre))
-            { HataMesaji = "Kullanıcı adı ve şifre gereklidir."; return; }
+            {
+                HataMesaji = "Kullanıcı adı ve şifre gereklidir.";
+                return;
+            }
 
-            var k = VeriDepolamaServisi.Instance.GirisYap(KullaniciAdi, Sifre);
-            if (k != null) GirisBasarili?.Invoke(k);
-            else HataMesaji = "Geçersiz kullanıcı adı veya şifre.";
+            var k = VeriDepolamaServisi.Instance.GirisYap(KullaniciAdi.Trim(), Sifre);
+            if (k != null)
+            {
+                GirisDenemesiYoneticisi.Basarili(KullaniciAdi.Trim());
+                GirisBasarili?.Invoke(k);
+                return;
+            }
+
+            var sayi = GirisDenemesiYoneticisi.BasarisizKaydet(KullaniciAdi.Trim());
+            LogServisi.Instance.GirisBasarisiz(KullaniciAdi.Trim(), $"Hatalı şifre veya kullanıcı (ardışık deneme: {sayi})");
+
+            var ek = GirisDenemesiYoneticisi.UyariMetni(sayi);
+            HataMesaji = string.IsNullOrEmpty(ek)
+                ? "Geçersiz kullanıcı adı veya şifre."
+                : $"Geçersiz kullanıcı adı veya şifre. {ek}";
         }
     }
 }

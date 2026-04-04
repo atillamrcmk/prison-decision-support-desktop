@@ -53,6 +53,7 @@ namespace KKDS.ViewModels
             TemizleCommand = new RelayCommand(Temizle);
             SilCommand = new RelayCommand(Sil, () => DuzenleModu);
             KayitSecCommand = new RelayCommand(p => KayitSec(p));
+            YetkiServisi.ViewModelKoruma(this, Roller.Psikolog);
         }
 
         private void MahkumKoduDegisti()
@@ -66,9 +67,16 @@ namespace KKDS.ViewModels
 
         private void Kaydet()
         {
+            var hata = FormDogrulama.Birlestir(
+                FormDogrulama.MahkumKoduKontrol(MahkumKodu),
+                FormDogrulama.TarihKontrol(Tarih, "Değerlendirme tarihi"),
+                FormDogrulama.ComboZorunlu(RuhHali, "Ruh hali"),
+                FormDogrulama.ComboZorunlu(OncekiDurum, "Önceki duruma göre"),
+                FormDogrulama.AciklamaUzunluk(Aciklama));
+            if (!string.IsNullOrEmpty(hata)) { MesajGoster(hata, true); return; }
+
             var m = VeriDepolamaServisi.Instance.MahkumBul(MahkumKodu);
             if (m == null) { MesajGoster($"'{MahkumKodu}' kodlu mahkum bulunamadı.", true); return; }
-            if (string.IsNullOrEmpty(RuhHali)) { MesajGoster("Ruh hali seçilmelidir.", true); return; }
 
             var pd = new PsikologDegerlendirme
             {

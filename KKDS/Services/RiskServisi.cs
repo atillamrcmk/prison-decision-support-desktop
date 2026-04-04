@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using KKDS.Data;
 using KKDS.Models;
 
 namespace KKDS.Services
@@ -10,7 +11,7 @@ namespace KKDS.Services
         private static readonly Lazy<RiskServisi> _instance = new(() => new RiskServisi());
         public static RiskServisi Instance => _instance.Value;
 
-        private readonly VeriDepolamaServisi _veri = VeriDepolamaServisi.Instance;
+        private readonly IDataRepository _veri = JsonDataRepository.Instance;
 
         public RiskSkoru RiskSkoruHesapla(int mahkumId)
         {

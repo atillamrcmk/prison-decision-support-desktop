@@ -25,11 +25,13 @@ namespace KKDS.ViewModels
         private string _seciliTur = "Tümü";
         private DateTime? _baslangicTarihi;
         private DateTime? _bitisTarihi;
+        private bool _demoDahil;
 
         public string AramaMetni { get => _aramaMetni; set { SetProperty(ref _aramaMetni, value); Filtrele(); } }
         public string SeciliTur { get => _seciliTur; set { SetProperty(ref _seciliTur, value); Filtrele(); } }
         public DateTime? BaslangicTarihi { get => _baslangicTarihi; set { SetProperty(ref _baslangicTarihi, value); Filtrele(); } }
         public DateTime? BitisTarihi { get => _bitisTarihi; set { SetProperty(ref _bitisTarihi, value); Filtrele(); } }
+        public bool DemoKayitlariGoster { get => _demoDahil; set { SetProperty(ref _demoDahil, value); Filtrele(); } }
 
         public ObservableCollection<string> TurListesi { get; } = new() { "Tümü", "disiplin", "psikolog", "revir", "kurul" };
         public ObservableCollection<KayitSatir> Kayitlar { get; } = new();
@@ -37,14 +39,15 @@ namespace KKDS.ViewModels
 
         public TumKayitlarViewModel()
         {
-            TemizleCommand = new RelayCommand(() => { AramaMetni = ""; SeciliTur = "Tümü"; BaslangicTarihi = null; BitisTarihi = null; });
-            Filtrele();
+            YetkiServisi.ViewModelKoruma(this, Roller.Yonetici);
+            TemizleCommand = new RelayCommand(() => { AramaMetni = ""; SeciliTur = "Tümü"; BaslangicTarihi = null; BitisTarihi = null; DemoKayitlariGoster = false; });
+            if (!YetkisizMod) Filtrele();
         }
 
         private void Filtrele()
         {
             Kayitlar.Clear();
-            var tumKayitlar = VeriDepolamaServisi.Instance.TumKayitlar();
+            var tumKayitlar = VeriDepolamaServisi.Instance.TumKayitlar(DemoKayitlariGoster);
 
             if (SeciliTur != "Tümü")
                 tumKayitlar = tumKayitlar.Where(k => k.KayitTuru == SeciliTur).ToList();

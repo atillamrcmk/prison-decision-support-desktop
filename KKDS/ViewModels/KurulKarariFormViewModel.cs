@@ -54,15 +54,23 @@ namespace KKDS.ViewModels
         {
             KaydetCommand = new RelayCommand(Kaydet);
             TemizleCommand = new RelayCommand(Temizle);
-            ListeYenile();
+            YetkiServisi.ViewModelKoruma(this, Roller.Yonetici);
+            if (!YetkisizMod) ListeYenile();
         }
 
         private void Kaydet()
         {
+            var hata = FormDogrulama.Birlestir(
+                FormDogrulama.MahkumKoduKontrol(MahkumKodu),
+                FormDogrulama.TarihKontrol(Tarih, "Karar tarihi"),
+                FormDogrulama.ComboZorunlu(KararTuru, "Karar türü"),
+                FormDogrulama.AciklamaUzunluk(KisaGerekce),
+                FormDogrulama.AciklamaUzunluk(DetayliGerekce));
+            if (!string.IsNullOrEmpty(hata)) { Msg(hata, true); return; }
+            if (string.IsNullOrWhiteSpace(KisaGerekce)) { Msg("Kısa gerekçe girilmelidir.", true); return; }
+
             var m = VeriDepolamaServisi.Instance.MahkumBul(MahkumKodu);
             if (m == null) { Msg("Mahkum bulunamadı.", true); return; }
-            if (string.IsNullOrEmpty(KararTuru)) { Msg("Karar türü seçilmelidir.", true); return; }
-            if (string.IsNullOrWhiteSpace(KisaGerekce)) { Msg("Kısa gerekçe girilmelidir.", true); return; }
 
             var karar = new KurulKarari
             {

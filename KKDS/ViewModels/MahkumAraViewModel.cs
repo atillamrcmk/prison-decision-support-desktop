@@ -17,14 +17,17 @@ namespace KKDS.ViewModels
         public MahkumAraViewModel()
         {
             AraCommand = new RelayCommand(Ara);
-            foreach (var m in VeriDepolamaServisi.Instance.Mahkumlar) Sonuclar.Add(m);
+            YetkiServisi.ViewModelKoruma(this, Roller.Psikolog, Roller.Revir, Roller.Disiplin);
+            if (!YetkisizMod)
+                foreach (var m in VeriDepolamaServisi.Instance.MahkumlariGetir(demoDahil: true, pasifDahil: false))
+                    Sonuclar.Add(m);
         }
 
         private void Ara()
         {
             Sonuclar.Clear();
             var list = string.IsNullOrWhiteSpace(AramaMetni)
-                ? VeriDepolamaServisi.Instance.Mahkumlar
+                ? VeriDepolamaServisi.Instance.MahkumlariGetir(demoDahil: true, pasifDahil: false)
                 : VeriDepolamaServisi.Instance.MahkumAra(AramaMetni);
             foreach (var m in list) Sonuclar.Add(m);
         }

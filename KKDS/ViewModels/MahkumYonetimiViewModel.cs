@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
@@ -22,6 +23,11 @@ namespace KKDS.ViewModels
         private bool _duzenleModu;
         private Mahkum? _secili;
         private string _aramaMetni = "";
+        private bool _pasifGoster;
+        private bool _demoGoster;
+
+        public bool PasifKayitlariGoster { get => _pasifGoster; set { SetProperty(ref _pasifGoster, value); ListeYenile(); } }
+        public bool DemoKayitlariGoster { get => _demoGoster; set { SetProperty(ref _demoGoster, value); ListeYenile(); } }
 
         public string MahkumKodu { get => _mahkumKodu; set => SetProperty(ref _mahkumKodu, value); }
         public string AdSoyad { get => _adSoyad; set => SetProperty(ref _adSoyad, value); }
@@ -57,20 +63,34 @@ namespace KKDS.ViewModels
             KayitSecCommand = new RelayCommand(p => KayitSec(p));
             TestYukleCommand = new RelayCommand(TestYukle);
             TestTemizleCommand = new RelayCommand(TestTemizle);
-            ListeYenile();
+            YetkiServisi.ViewModelKoruma(this, Roller.Yonetici);
+            if (!YetkisizMod) ListeYenile();
         }
 
         private void ListeYenile()
         {
             MahkumListesi.Clear();
-            var list = string.IsNullOrWhiteSpace(AramaMetni)
-                ? VeriDepolamaServisi.Instance.Mahkumlar.ToList()
-                : VeriDepolamaServisi.Instance.MahkumAra(AramaMetni);
+            var veri = VeriDepolamaServisi.Instance;
+            List<Mahkum> list;
+            if (string.IsNullOrWhiteSpace(AramaMetni))
+                list = veri.MahkumlariGetir(DemoKayitlariGoster, PasifKayitlariGoster);
+            else
+            {
+                list = veri.MahkumAra(AramaMetni);
+                if (!PasifKayitlariGoster) list = list.Where(m => m.AktifMi).ToList();
+                if (!DemoKayitlariGoster) list = list.Where(m => !m.IsDemoData).ToList();
+            }
             foreach (var m in list) MahkumListesi.Add(m);
         }
 
         private void Kaydet()
         {
+            var hata = FormDogrulama.Birlestir(
+                FormDogrulama.TarihKontrol(GirisTarihi, "Kuruma giriş tarihi"),
+                FormDogrulama.ComboZorunlu(Durum, "Durum"),
+                FormDogrulama.ComboZorunlu(Blok, "Blok"),
+                FormDogrulama.AciklamaUzunluk(Not));
+            if (!string.IsNullOrEmpty(hata)) { Msg(hata, true); return; }
             if (string.IsNullOrWhiteSpace(AdSoyad)) { Msg("Ad Soyad gereklidir.", true); return; }
             var m = new Mahkum
             {
@@ -85,6 +105,13 @@ namespace KKDS.ViewModels
         private void Guncelle()
         {
             if (_secili == null) return;
+            var hata = FormDogrulama.Birlestir(
+                FormDogrulama.TarihKontrol(GirisTarihi, "Kuruma giriş tarihi"),
+                FormDogrulama.ComboZorunlu(Durum, "Durum"),
+                FormDogrulama.ComboZorunlu(Blok, "Blok"),
+                FormDogrulama.AciklamaUzunluk(Not));
+            if (!string.IsNullOrEmpty(hata)) { Msg(hata, true); return; }
+            if (string.IsNullOrWhiteSpace(AdSoyad)) { Msg("Ad Soyad gereklidir.", true); return; }
             _secili.MahkumKodu = MahkumKodu; _secili.AdSoyad = AdSoyad; _secili.Blok = Blok;
             _secili.Kogus = Kogus; _secili.KurumaGirisTarihi = GirisTarihi; _secili.Durum = Durum; _secili.Not = Not;
             VeriDepolamaServisi.Instance.MahkumKaydet(_secili);
@@ -114,15 +141,14 @@ namespace KKDS.ViewModels
 
         private void TestYukle()
         {
-            TestVeriOlusturucu.Olustur();
-            VeriDepolamaServisi.Instance.TumVerileriYukle();
-            Msg("Test verisi yüklendi.", false); ListeYenile();
+            VeriDepolamaServisi.Instance.DemoVerisiYukle();
+            Msg("Demo verisi yüklendi.", false); ListeYenile();
         }
 
         private void TestTemizle()
         {
-            VeriDepolamaServisi.Instance.TestVerisiniTemizle();
-            Msg("Tüm veriler temizlendi.", false); ListeYenile();
+            VeriDepolamaServisi.Instance.DemoVerisiniTemizle();
+            Msg("Demo kayıtları temizlendi.", false); ListeYenile();
         }
 
         private void Msg(string m, bool h) { Mesaj = m; MesajHata = h; }

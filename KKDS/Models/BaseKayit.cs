@@ -20,6 +20,12 @@ namespace KKDS.Models
         [JsonPropertyName("giren_rol")]
         public string GirenRol { get; set; } = string.Empty;
 
+        [JsonPropertyName("olusturan_kullanici")]
+        public string OlusturanKullanici { get; set; } = string.Empty;
+
+        [JsonPropertyName("guncelleyen_kullanici")]
+        public string GuncelleyenKullanici { get; set; } = string.Empty;
+
         [JsonPropertyName("olusturma_zamani")]
         public DateTime OlusturmaZamani { get; set; } = DateTime.Now;
 
@@ -28,5 +34,8 @@ namespace KKDS.Models
 
         [JsonPropertyName("aktif_mi")]
         public bool AktifMi { get; set; } = true;
+
+        [JsonPropertyName("is_demo_data")]
+        public bool IsDemoData { get; set; }
     }
 }

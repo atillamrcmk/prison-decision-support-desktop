@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
+using KKDS.Data;
 using KKDS.Helpers;
 using KKDS.Models;
 using KKDS.Services;
@@ -14,6 +16,17 @@ namespace KKDS.ViewModels
         private string _aramaMetni = string.Empty;
         private string _seciliBlok = "Tümü";
         private string _seciliDurum = "Tümü";
+        private bool _pasifGoster;
+        private bool _demoGoster;
+        private bool _riskUstu70;
+        private bool _son7GunOlay;
+        private Dictionary<int, MahkumListeOzet>? _ozetCache;
+        private int _gorunenKayitSayisi;
+
+        public bool PasifKayitlariGoster { get => _pasifGoster; set { SetProperty(ref _pasifGoster, value); _ozetCache = null; Filtrele(); } }
+        public bool DemoKayitlariGoster { get => _demoGoster; set { SetProperty(ref _demoGoster, value); _ozetCache = null; Filtrele(); } }
+        public bool RiskUstu70Filtre { get => _riskUstu70; set { SetProperty(ref _riskUstu70, value); Filtrele(); } }
+        public bool Son7GunOlayFiltre { get => _son7GunOlay; set { SetProperty(ref _son7GunOlay, value); Filtrele(); } }
 
         public string AramaMetni
         {
@@ -36,24 +49,64 @@ namespace KKDS.ViewModels
         public ObservableCollection<string> BlokListesi { get; } = new() { "Tümü", "A-Blok", "B-Blok", "C-Blok", "D-Blok" };
         public ObservableCollection<string> DurumListesi { get; } = new() { "Tümü", "aktif", "yakin_izlem", "tahliye_edildi", "nakil" };
         public ObservableCollection<MahkumListeSatir> Mahkumlar { get; } = new();
+        public int GorunenKayitSayisi { get => _gorunenKayitSayisi; set => SetProperty(ref _gorunenKayitSayisi, value); }
 
         public ICommand DetayCommand { get; }
+        public ICommand ListeYenileCommand { get; }
 
         public MahkumListeViewModel(MainViewModel main)
         {
             _main = main;
             DetayCommand = new RelayCommand(p => DetayGoster(p));
-            Filtrele();
+            ListeYenileCommand = new RelayCommand(() => { _ozetCache = null; Filtrele(); });
+            YetkiServisi.ViewModelKoruma(this, Roller.Yonetici);
+            if (!YetkisizMod) IlkYukle();
+        }
+
+        /// <summary>
+        /// Diskten veriyi al; yalnızca demo mahkum varsa (üretim kaydı yok) listeyi demo dahil göster.
+        /// Aksi halde demo varsayılan kapalı kalır.
+        /// </summary>
+        private void IlkYukle()
+        {
+            IDataRepository veri = VeriDepolamaServisi.Instance;
+            veri.TumVerileriYukle();
+            if (veri.DemoMahkumVarMi() && veri.Mahkumlar.Count == 0)
+                DemoKayitlariGoster = true;
+            else
+                Filtrele();
+        }
+
+        private void OzetCacheDoldur()
+        {
+            var veri = VeriDepolamaServisi.Instance;
+            veri.TumVerileriYukle();
+            var analiz = AnalizServisi.Instance;
+            var risk = RiskServisi.Instance;
+            var bugun = DateTime.Today;
+            _ozetCache = new Dictionary<int, MahkumListeOzet>();
+            foreach (var m in veri.MahkumlariGetir(DemoKayitlariGoster, PasifKayitlariGoster))
+            {
+                var son7 = veri.MahkumOlaylari(m.Id).Count(o => o.OlayTarihi >= bugun.AddDays(-7));
+                var rs = risk.RiskSkoruHesapla(m.Id);
+                _ozetCache[m.Id] = new MahkumListeOzet
+                {
+                    Risk = rs.ToplamSkor,
+                    Seviye = rs.Seviye,
+                    Egilim = analiz.TamAnaliz(m.Id).Egilim,
+                    Son7GunOlay = son7
+                };
+            }
         }
 
         private void Filtrele()
         {
             Mahkumlar.Clear();
-            var veri = VeriDepolamaServisi.Instance;
-            var analiz = AnalizServisi.Instance;
-            var risk = RiskServisi.Instance;
+            if (_ozetCache == null) OzetCacheDoldur();
 
-            var query = veri.Mahkumlar.AsEnumerable();
+            var veri = VeriDepolamaServisi.Instance;
+
+            var query = veri.MahkumlariGetir(DemoKayitlariGoster, PasifKayitlariGoster).AsEnumerable();
 
             if (SeciliBlok != "Tümü")
                 query = query.Where(m => m.Blok == SeciliBlok);
@@ -66,13 +119,14 @@ namespace KKDS.ViewModels
 
             foreach (var m in query)
             {
-                var a = analiz.TamAnaliz(m.Id);
-                var r = risk.RiskSkoruHesapla(m.Id);
+                var oz = _ozetCache![m.Id];
+                if (RiskUstu70Filtre && oz.Risk <= 70) continue;
+                if (Son7GunOlayFiltre && oz.Son7GunOlay == 0) continue;
+
                 var olaylar = veri.MahkumOlaylari(m.Id);
                 var kararlar = veri.MahkumKararlari(m.Id);
-
-                var sonOlay = olaylar.FirstOrDefault();
-                var sonKarar = kararlar.FirstOrDefault();
+                var sonOlay = olaylar.OrderByDescending(o => o.OlayTarihi).FirstOrDefault();
+                var sonKarar = kararlar.OrderByDescending(k => k.KararTarihi).FirstOrDefault();
 
                 Mahkumlar.Add(new MahkumListeSatir
                 {
@@ -83,11 +137,12 @@ namespace KKDS.ViewModels
                     Durum = DurumGoster(m.Durum),
                     SonOlayTarihi = sonOlay?.OlayTarihi.ToString("dd.MM.yyyy") ?? "-",
                     SonKurulKarari = sonKarar?.KararTuru ?? "-",
-                    RiskSkoru = r.ToplamSkor,
-                    RiskSeviye = r.Seviye,
-                    Egilim = a.Egilim
+                    RiskSkoru = oz.Risk,
+                    RiskSeviye = oz.Seviye,
+                    Egilim = oz.Egilim
                 });
             }
+            GorunenKayitSayisi = Mahkumlar.Count;
         }
 
         private string DurumGoster(string durum) => durum switch
@@ -104,6 +159,14 @@ namespace KKDS.ViewModels
             if (param is int id)
                 _main.MahkumDetayGoster(id);
         }
+    }
+
+    internal sealed class MahkumListeOzet
+    {
+        public double Risk { get; set; }
+        public string Seviye { get; set; } = "";
+        public string Egilim { get; set; } = "";
+        public int Son7GunOlay { get; set; }
     }
 
     public class MahkumListeSatir

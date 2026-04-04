@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using KKDS.Data;
 using KKDS.Models;
 
 namespace KKDS.Services
@@ -11,7 +12,7 @@ namespace KKDS.Services
         private static readonly Lazy<AnalizServisi> _instance = new(() => new AnalizServisi());
         public static AnalizServisi Instance => _instance.Value;
 
-        private readonly VeriDepolamaServisi _veri = VeriDepolamaServisi.Instance;
+        private readonly IDataRepository _veri = JsonDataRepository.Instance;
 
         private static readonly string[] CubukRenkPaleti =
         {
@@ -50,6 +51,7 @@ namespace KKDS.Services
             sonuc.Uyum = UyumAnaliziYap(olaylar, psikologlar, revirler, sonuc.Egilim);
             sonuc.RiskBoyutlari = RiskBoyutlariHesapla(sonuc, psikologlar, revirler, olaylar);
             sonuc.SistemOzeti = SistemOzetiUret(sonuc, psikologlar, revirler);
+            sonuc.SistemYorumuMetni = SistemYorumuMetniOlustur(sonuc, psikologlar, revirler, olaylar);
             sonuc.OncelikNedenleri = OncelikNedeniUret(sonuc, psikologlar, revirler, olaylar);
 
             return sonuc;
@@ -273,15 +275,110 @@ namespace KKDS.Services
                 }
             }
 
+            var kt = sonKarar.KararTarihi;
+            sonuc.Oncesi7Gun = olaylar.Count(o => o.OlayTarihi >= kt.AddDays(-7) && o.OlayTarihi < kt);
+            sonuc.Sonrasi7Gun = olaylar.Count(o => o.OlayTarihi >= kt && o.OlayTarihi <= kt.AddDays(7));
+            if (sonuc.Sonrasi7Gun < sonuc.Oncesi7Gun) sonuc.EtkiSonuc7Gun = "Olumlu";
+            else if (sonuc.Sonrasi7Gun > sonuc.Oncesi7Gun) sonuc.EtkiSonuc7Gun = "Olumsuz";
+            else sonuc.EtkiSonuc7Gun = "Nötr";
+
             return sonuc;
+        }
+        #endregion
+
+        #region Kritik uyarılar (kurumsal erken uyarı)
+        /// <summary>Aktif / yakın izlem mahkumlar için kritik uyarı listesi (demo dahil; pasif hariç).</summary>
+        public List<KritikUyariOgesi> KritikUyarlariHesapla()
+        {
+            var liste = new List<KritikUyariOgesi>();
+            var bugun = DateTime.Today;
+            var simdi = DateTime.Now;
+            var mahkumlar = _veri.MahkumlariGetir(demoDahil: true, pasifDahil: false)
+                .Where(m => m.Durum == "aktif" || m.Durum == "yakin_izlem")
+                .ToList();
+
+            foreach (var m in mahkumlar)
+            {
+                var olaylar = _veri.MahkumOlaylari(m.Id);
+                var psik = _veri.MahkumPsikolog(m.Id);
+                var rev = _veri.MahkumRevir(m.Id);
+
+                int n48 = olaylar.Count(o => o.OlayTarihi >= simdi.AddHours(-48));
+                if (n48 >= 2)
+                {
+                    liste.Add(new KritikUyariOgesi
+                    {
+                        MahkumId = m.Id,
+                        MahkumKodu = m.MahkumKodu,
+                        Mesaj = $"son 48 saatte {n48} disiplin olayı",
+                        Seviye = "kritik",
+                        Tip = "48h"
+                    });
+                }
+
+                int son7 = olaylar.Count(o => o.OlayTarihi >= bugun.AddDays(-7));
+                int onceki7 = olaylar.Count(o => o.OlayTarihi >= bugun.AddDays(-14) && o.OlayTarihi < bugun.AddDays(-7));
+                bool hizliArtis = onceki7 == 0 ? son7 >= 3 : son7 >= System.Math.Max(onceki7 * 2, onceki7 + 2) && son7 >= 2;
+                if (hizliArtis)
+                {
+                    liste.Add(new KritikUyariOgesi
+                    {
+                        MahkumId = m.Id,
+                        MahkumKodu = m.MahkumKodu,
+                        Mesaj = "hızlı kötüleşme tespit edildi (son 7 gün olay artışı)",
+                        Seviye = "uyari",
+                        Tip = "7d_artis"
+                    });
+                }
+
+                var sp = psik.FirstOrDefault();
+                var rv = rev.FirstOrDefault();
+                bool psikKotu = sp != null && sp.OncekiDurumaGore.Equals("Kötüleşme", StringComparison.OrdinalIgnoreCase);
+                bool revirBozulma = rv != null && (
+                    rv.DavranisEtkisi.Equals("Negatif", StringComparison.OrdinalIgnoreCase) ||
+                    (rv.UykuDurumu.Equals("Bozuk", StringComparison.OrdinalIgnoreCase) && rv.StresSeviyesi >= 3));
+                if (psikKotu && revirBozulma)
+                {
+                    liste.Add(new KritikUyariOgesi
+                    {
+                        MahkumId = m.Id,
+                        MahkumKodu = m.MahkumKodu,
+                        Mesaj = "psikolog kötüleşme ve revir bozulması birlikte",
+                        Seviye = "kritik",
+                        Tip = "psik_revir"
+                    });
+                }
+
+                int yuksek14 = olaylar.Count(o => o.Siddet >= 4 && o.OlayTarihi >= bugun.AddDays(-14));
+                int yuksek7 = olaylar.Count(o => o.Siddet >= 4 && o.OlayTarihi >= bugun.AddDays(-7));
+                if (yuksek7 >= 1 || yuksek14 >= 2)
+                {
+                    liste.Add(new KritikUyariOgesi
+                    {
+                        MahkumId = m.Id,
+                        MahkumKodu = m.MahkumKodu,
+                        Mesaj = yuksek7 >= 1
+                            ? $"yüksek şiddetli olay (4–5) — son 7 günde {yuksek7} kayıt"
+                            : $"yüksek şiddetli olay (4–5) — son 14 günde {yuksek14} kayıt",
+                        Seviye = yuksek7 >= 1 ? "kritik" : "uyari",
+                        Tip = "siddet"
+                    });
+                }
+            }
+
+            return liste
+                .OrderByDescending(u => u.Seviye == "kritik")
+                .ThenBy(u => u.MahkumKodu)
+                .ThenBy(u => u.Tip)
+                .ToList();
         }
         #endregion
 
         #region Global Karar Etki
         public List<GlobalKararEtki> GlobalKararEtkiHesapla()
         {
-            var tumOlaylar = _veri.Olaylar.ToList();
-            var tumKararlar = _veri.KurulKararlari.ToList();
+            var tumOlaylar = _veri.OlaylarDahilDemo.ToList();
+            var tumKararlar = _veri.KurulKararlariDahilDemo.ToList();
             var sonuclar = new List<GlobalKararEtki>();
 
             foreach (var kararTuru in KararTurleri.Tumunu)
@@ -476,6 +573,42 @@ namespace KKDS.Services
 
             return ozet;
         }
+
+        /// <summary>2–4 cümle, tekrar etmeyen doğal dil özeti.</summary>
+        public string SistemYorumuMetniOlustur(AnalizSonuc analiz,
+            List<PsikologDegerlendirme> psikologlar, List<RevirKaydi> revirler, List<Olay> olaylar)
+        {
+            var cumleler = new List<string>();
+
+            if (analiz.HizliKotulesme)
+                cumleler.Add("Bu vaka son dönemde hızla kötüleşmiştir.");
+            else if (analiz.AniKirilma)
+                cumleler.Add("Ani davranış kırılması gözlemlenmiştir.");
+            else if (analiz.Egilim == "artiyor")
+                cumleler.Add("Disiplin olaylarında artış eğilimi sürüyor.");
+
+            if (analiz.Uyum.CiftSinyal && cumleler.Count < 4)
+                cumleler.Add("Psikolog ve revir verileri aynı yönde risk göstermektedir.");
+            else if (analiz.Uyum.PsikologOlayUyumu && analiz.Uyum.RevirOlayUyumu && cumleler.Count < 4)
+                cumleler.Add("Hem psikolojik hem sağlık bulguları olay trendiyle uyumludur.");
+            else if (analiz.Uyum.PsikologOlayUyumu && cumleler.Count < 4)
+                cumleler.Add("Psikolojik değerlendirme olay eğilimini desteklemektedir.");
+            else if (analiz.Uyum.RevirOlayUyumu && cumleler.Count < 4)
+                cumleler.Add("Revir kayıtları olay eğilimiyle uyumludur.");
+
+            if (analiz.Oruntu.TekrarEdenDongu && cumleler.Count < 4)
+                cumleler.Add("Tekrar eden disiplin olayları kontrol kaybına işaret edebilir.");
+
+            if (cumleler.Count == 0)
+                cumleler.Add(analiz.Egilim == "azaliyor"
+                    ? "Göstergeler olumlu yönde seyrediyor."
+                    : "Mevcut veriler sınırlı veya olay seyri dengeli görünüyor.");
+
+            if (cumleler.Count < 2 && olaylar.Count(o => o.OlayTarihi >= DateTime.Today.AddDays(-14)) >= 4)
+                cumleler.Add("Son iki haftada olay sıklığı dikkat çekici düzeydedir.");
+
+            return string.Join(" ", cumleler.Take(4));
+        }
         #endregion
 
         #region Oncelik Nedeni
@@ -483,35 +616,54 @@ namespace KKDS.Services
             List<PsikologDegerlendirme> psikologlar, List<RevirKaydi> revirler, List<Olay> olaylar)
         {
             var nedenler = new List<string>();
+            var bugun = DateTime.Today;
 
             if (analiz.HizliKotulesme)
-                nedenler.Add("Son 2 haftada hızlı kötüleşme tespit edildi");
+                nedenler.Add("Son 2 haftada hızlı kötüleşme (haftalık olay trendi)");
 
             if (analiz.AniKirilma)
-                nedenler.Add("Ani davranış kırılması yaşandı");
+                nedenler.Add("Ani davranış kırılması kaydedildi");
 
             if (analiz.Oruntu.SozdenFizikseleEvrim)
-                nedenler.Add("Sözelden fiziksele geçiş örüntüsü var");
+                nedenler.Add("Sözelden fiziksele geçiş örüntüsü");
 
             if (analiz.Uyum.CiftSinyal)
-                nedenler.Add("Psikolog ve revir çift sinyal veriyor");
+                nedenler.Add("Psikolog kötüleşme + revir–olay uyumu (çift sinyal)");
 
             if (analiz.KararEtkisi.TekrarYukselisi)
-                nedenler.Add("Son kurul kararının etkisi geçici kalmış");
+                nedenler.Add("Son kurul kararı sonrası tekrar yükseliş");
 
-            var son30Gun = olaylar.Where(o => o.OlayTarihi >= DateTime.Today.AddDays(-30)).ToList();
+            var son14 = olaylar.Where(o => o.OlayTarihi >= bugun.AddDays(-14)).ToList();
+            var onceki14 = olaylar.Where(o => o.OlayTarihi >= bugun.AddDays(-28) && o.OlayTarihi < bugun.AddDays(-14)).ToList();
+            if (onceki14.Count > 0)
+            {
+                double artis = (son14.Count - (double)onceki14.Count) / onceki14.Count * 100;
+                if (artis >= 40)
+                    nedenler.Add($"Son 2 hafta önceki 2 haftaya göre olay sayısında yaklaşık %{artis:F0} artış");
+            }
+            else if (son14.Count >= 4)
+                nedenler.Add($"Son 2 haftada {son14.Count} disiplin olayı (önceki dönemle kıyas için veri az)");
+
+            var son30Gun = olaylar.Where(o => o.OlayTarihi >= bugun.AddDays(-30)).ToList();
             int yuksekSiddet = son30Gun.Count(o => o.Siddet >= 4);
-            if (yuksekSiddet >= 3)
-                nedenler.Add($"Yüksek şiddetli olay tekrarları ({yuksekSiddet} olay)");
+            if (yuksekSiddet >= 1)
+                nedenler.Add($"{yuksekSiddet} adet yüksek şiddetli olay (şiddet 4–5, son 30 gün)");
 
             var sonPsikolog = psikologlar.FirstOrDefault();
+            if (sonPsikolog != null && sonPsikolog.OncekiDurumaGore.Equals("Kötüleşme", StringComparison.OrdinalIgnoreCase))
+                nedenler.Add("Psikolog: son değerlendirmede kötüleşme");
+
+            var sonRevir = revirler.FirstOrDefault();
+            if (sonRevir != null && (sonRevir.UykuDurumu.Equals("Bozuk", StringComparison.OrdinalIgnoreCase) || sonRevir.DavranisEtkisi.Equals("Negatif", StringComparison.OrdinalIgnoreCase)))
+                nedenler.Add($"Revir: uyku {sonRevir.UykuDurumu}, davranış etkisi {sonRevir.DavranisEtkisi}");
+
             if (sonPsikolog != null && sonPsikolog.KendineZararRiski >= 4)
-                nedenler.Add("Kendine zarar verme riski yüksek");
+                nedenler.Add("Kendine zarar verme riski yüksek (psikolog)");
 
             if (analiz.Oruntu.TekrarEdenDongu)
-                nedenler.Add("Tekrar eden davranış döngüsü mevcut");
+                nedenler.Add($"Tekrar eden olay döngüsü: {analiz.Oruntu.TekrarDonguDetay}");
 
-            return nedenler;
+            return nedenler.Distinct().ToList();
         }
         #endregion
     }

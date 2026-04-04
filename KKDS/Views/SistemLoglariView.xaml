@@ -1,0 +1,18 @@
+<UserControl x:Class="KKDS.Views.SistemLoglariView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Border Style="{StaticResource CardBorder}">
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                    <Button Content="Yenile" DockPanel.Dock="Right" Style="{StaticResource SecondaryButton}" Command="{Binding YenileCommand}"/>
+                    <TextBlock Text="Sistem ve denetim günlükleri" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                </DockPanel>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="520">
+                    <TextBox Text="{Binding Icerik, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap"
+                             FontFamily="Consolas" FontSize="10" BorderThickness="0" Background="Transparent"/>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

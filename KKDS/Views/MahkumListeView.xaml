@@ -5,7 +5,12 @@
     <StackPanel MinWidth="860">
         <!-- Filters -->
         <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12">
-            <StackPanel Orientation="Horizontal">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                    <Button Content="Listeyi yenile" Command="{Binding ListeYenileCommand}" Style="{StaticResource SecondaryButton}" VerticalAlignment="Bottom"/>
+                    <TextBlock Text="Risk ve olay sayıları önbelleğe alınır; veri değişince yenileyin." FontSize="10" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="12,0,0,0" TextWrapping="Wrap"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
                 <StackPanel Margin="0,0,16,0">
                     <TextBlock Text="Arama" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,4"/>
                     <TextBox Text="{Binding AramaMetni, UpdateSourceTrigger=PropertyChanged}" Width="200" />
@@ -18,11 +23,21 @@
                     <TextBlock Text="Durum" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,4"/>
                     <ComboBox ItemsSource="{Binding DurumListesi}" SelectedItem="{Binding SeciliDurum}" Width="120"/>
                 </StackPanel>
+                <StackPanel Margin="16,0,0,0" VerticalAlignment="Bottom">
+                    <CheckBox Content="Pasif kayıtları göster" IsChecked="{Binding PasifKayitlariGoster}" FontSize="11"/>
+                    <CheckBox Content="Demo kayıtları göster" IsChecked="{Binding DemoKayitlariGoster}" FontSize="11" Margin="0,4,0,0"/>
+                    <CheckBox Content="Risk &gt; 70" IsChecked="{Binding RiskUstu70Filtre}" FontSize="11" Margin="0,4,0,0"/>
+                    <CheckBox Content="Son 7 gün olay var" IsChecked="{Binding Son7GunOlayFiltre}" FontSize="11" Margin="0,4,0,0"/>
+                </StackPanel>
+                </StackPanel>
             </StackPanel>
         </Border>
 
         <!-- List -->
         <Border Style="{StaticResource CardBorder}">
+            <StackPanel>
+            <TextBlock Text="Seçilen filtrelere uygun mahkum bulunmuyor." FontSize="12" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,8"
+                       Visibility="{Binding GorunenKayitSayisi, Converter={StaticResource ZeroToVis}}"/>
             <DataGrid ItemsSource="{Binding Mahkumlar}" RowHeight="40">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Mahkum Kodu" Binding="{Binding MahkumKodu}"/>
@@ -53,6 +68,7 @@
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
+            </StackPanel>
         </Border>
     </StackPanel>
 </UserControl>

@@ -28,17 +28,20 @@ namespace KKDS.ViewModels
         {
             _main = main;
             DetayCommand = new RelayCommand(p => DetayGoster(p));
-            Yukle();
+            YetkiServisi.ViewModelKoruma(this, Roller.Yonetici);
+            if (!YetkisizMod) Yukle();
         }
 
         private void Yukle()
         {
             var veri = VeriDepolamaServisi.Instance;
+            veri.TumVerileriYukle();
             var analizServisi = AnalizServisi.Instance;
             var riskServisi = RiskServisi.Instance;
             var tahminServisi = TahminServisi.Instance;
 
-            var aktifMahkumlar = veri.Mahkumlar
+            // Mahkumlar özelliği demo hariç; gösterge/kurul ekranında demo dahil aktif mahkumlar kullanılır.
+            var aktifMahkumlar = veri.MahkumlariGetir(demoDahil: true, pasifDahil: false)
                 .Where(m => m.Durum == "aktif" || m.Durum == "yakin_izlem")
                 .ToList();
 
@@ -66,6 +69,9 @@ namespace KKDS.ViewModels
                     SaglikRisk = analiz.RiskBoyutlari.Saglik,
                     OncelikNedenleri = analiz.OncelikNedenleri,
                     SistemOzeti = analiz.SistemOzeti.FirstOrDefault() ?? "Veri yetersiz.",
+                    SistemYorumuMetni = string.IsNullOrWhiteSpace(analiz.SistemYorumuMetni)
+                        ? (analiz.SistemOzeti.FirstOrDefault() ?? "Veri yetersiz.")
+                        : analiz.SistemYorumuMetni,
                     BeklenenOlay = tahmin.BeklenenOlaySayisi
                 };
 
@@ -125,6 +131,7 @@ namespace KKDS.ViewModels
         public string SaglikRisk { get; set; } = "";
         public System.Collections.Generic.List<string> OncelikNedenleri { get; set; } = new();
         public string SistemOzeti { get; set; } = "";
+        public string SistemYorumuMetni { get; set; } = "";
         public double BeklenenOlay { get; set; }
         public string OncelikNedenleriMetin => OncelikNedenleri.Any()
             ? string.Join("\n", OncelikNedenleri.Select(n => $"• {n}"))

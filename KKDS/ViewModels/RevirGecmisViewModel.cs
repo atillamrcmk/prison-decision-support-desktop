@@ -23,7 +23,8 @@ namespace KKDS.ViewModels
         public RevirGecmisViewModel()
         {
             TemizleCommand = new RelayCommand(() => { AramaMetni = ""; BaslangicTarihi = null; BitisTarihi = null; });
-            Filtrele();
+            YetkiServisi.ViewModelKoruma(this, Roller.Revir);
+            if (!YetkisizMod) Filtrele();
         }
 
         private void Filtrele()

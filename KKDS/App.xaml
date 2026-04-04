@@ -36,6 +36,8 @@
             <DataTemplate DataType="{x:Type vm:KurulKarariFormViewModel}"><views:KurulKarariFormView/></DataTemplate>
             <DataTemplate DataType="{x:Type vm:KurulOnaylarViewModel}"><views:KurulOnaylarView/></DataTemplate>
             <DataTemplate DataType="{x:Type vm:KullaniciYonetimiViewModel}"><views:KullaniciYonetimiView/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:VeriAyarlariViewModel}"><views:VeriAyarlariView/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:SistemLoglariViewModel}"><views:SistemLoglariView/></DataTemplate>
 
             <!-- Colors -->
             <SolidColorBrush x:Key="PrimaryBrush" Color="#1B2A4A"/>

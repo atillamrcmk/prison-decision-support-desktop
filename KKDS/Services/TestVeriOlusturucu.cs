@@ -11,7 +11,9 @@ namespace KKDS.Services
         public static void Olustur()
         {
             var veri = VeriDepolamaServisi.Instance;
-            if (veri.TestVerisiVarMi()) return;
+            if (veri.DemoMahkumVarMi()) return;
+            if (veri.Mahkumlar.Any())
+                return;
 
             var profiller = new (string Kod, string Ad, int Risk, string Blok, string Durum)[]
             {
@@ -39,8 +41,7 @@ namespace KKDS.Services
                     Kogus = $"{_rng.Next(1, 8)}",
                     KurumaGirisTarihi = DateTime.Today.AddDays(-_rng.Next(90, 365)),
                     Durum = p.Durum,
-                    GirenKullanici = "sistem",
-                    GirenRol = "sistem"
+                    IsDemoData = true
                 };
                 veri.MahkumKaydet(m);
                 OlaylarOlustur(m.Id, p.Risk);
@@ -49,7 +50,7 @@ namespace KKDS.Services
                 KurulOlustur(m.Id, p.Risk);
             }
 
-            LogServisi.Instance.Bilgi("sistem", "sistem", "Test verisi oluşturuldu (10 mahkum)");
+            LogServisi.Instance.Bilgi("sistem", "sistem", "Demo verisi oluşturuldu (10 mahkum, is_demo_data=true)");
         }
 
         private static void OlaylarOlustur(int mid, int risk)
@@ -72,9 +73,14 @@ namespace KKDS.Services
 
                 var o = new Olay
                 {
-                    MahkumId = mid, OlayTarihi = DateTime.Today.AddDays(-gun), OlayTuru = tur,
-                    Siddet = siddet, Hedef = Sec(Hedefler.Tumunu), ZamanDilimi = Sec(ZamanDilimleri.Tumunu),
-                    Aciklama = OlayAciklama(tur), GirenKullanici = "disiplin1", GirenRol = "disiplin"
+                    MahkumId = mid,
+                    OlayTarihi = DateTime.Today.AddDays(-gun),
+                    OlayTuru = tur,
+                    Siddet = siddet,
+                    Hedef = Sec(Hedefler.Tumunu),
+                    ZamanDilimi = Sec(ZamanDilimleri.Tumunu),
+                    Aciklama = OlayAciklama(tur),
+                    IsDemoData = true
                 };
                 VeriDepolamaServisi.Instance.OlayKaydet(o);
             }
@@ -96,10 +102,15 @@ namespace KKDS.Services
 
                 var pd = new PsikologDegerlendirme
                 {
-                    MahkumId = mid, DegerlendirmeTarihi = DateTime.Today.AddDays(-gun),
-                    RuhHali = ruh, AgresyonDuzeyi = agr, KendineZararRiski = zar, Isbirligi = isb,
-                    OncekiDurumaGore = durum, Aciklama = $"Rutin değerlendirme - {ruh.ToLower()}",
-                    GirenKullanici = "psikolog1", GirenRol = "psikolog"
+                    MahkumId = mid,
+                    DegerlendirmeTarihi = DateTime.Today.AddDays(-gun),
+                    RuhHali = ruh,
+                    AgresyonDuzeyi = agr,
+                    KendineZararRiski = zar,
+                    Isbirligi = isb,
+                    OncekiDurumaGore = durum,
+                    Aciklama = $"Rutin değerlendirme - {ruh.ToLower()}",
+                    IsDemoData = true
                 };
                 VeriDepolamaServisi.Instance.PsikologKaydet(pd);
             }
@@ -121,9 +132,14 @@ namespace KKDS.Services
 
                 var rk = new RevirKaydi
                 {
-                    MahkumId = mid, KayitTarihi = DateTime.Today.AddDays(-gun),
-                    UykuDurumu = uyku, IlacUyumu = ilac, StresSeviyesi = stres, DavranisEtkisi = dav,
-                    Aciklama = $"Rutin kontrol - {uyku.ToLower()} uyku", GirenKullanici = "revir1", GirenRol = "revir"
+                    MahkumId = mid,
+                    KayitTarihi = DateTime.Today.AddDays(-gun),
+                    UykuDurumu = uyku,
+                    IlacUyumu = ilac,
+                    StresSeviyesi = stres,
+                    DavranisEtkisi = dav,
+                    Aciklama = $"Rutin kontrol - {uyku.ToLower()} uyku",
+                    IsDemoData = true
                 };
                 VeriDepolamaServisi.Instance.RevirKaydet(rk);
             }
@@ -140,16 +156,18 @@ namespace KKDS.Services
                     : Sec(KararTurleri.Tumunu);
                 var kk = new KurulKarari
                 {
-                    MahkumId = mid, KararTarihi = DateTime.Today.AddDays(-gun), KararTuru = tur,
-                    SureGun = Sec(new[] { 3, 5, 7, 14, 21 }), KisaGerekce = KararGerekce(tur),
+                    MahkumId = mid,
+                    KararTarihi = DateTime.Today.AddDays(-gun),
+                    KararTuru = tur,
+                    SureGun = Sec(new[] { 3, 5, 7, 14, 21 }),
+                    KisaGerekce = KararGerekce(tur),
                     DetayliGerekce = $"Detaylı değerlendirme — {tur.ToLower()} kararı uygulanması önerilmektedir.",
                     GozdenGecirmeTarihi = DateTime.Today.AddDays(-gun + 30),
-                    GirenKullanici = "yonetici1", GirenRol = "yonetici"
+                    IsDemoData = true
                 };
 
                 kk.OnayBilgisiOlustur();
 
-                // Some old decisions are fully approved, some partially
                 bool tamOnay = gun > 21 && _rng.Next(0, 3) > 0;
                 bool kısmiOnay = !tamOnay && gun > 7;
 
@@ -177,17 +195,19 @@ namespace KKDS.Services
                 VeriDepolamaServisi.Instance.KurulKarariKaydet(kk);
             }
 
-            // One brand new pending decision for high-risk inmates
             if (risk >= 4)
             {
                 var yeniKarar = new KurulKarari
                 {
-                    MahkumId = mid, KararTarihi = DateTime.Today, KararTuru = KararTurleri.GozlemAltinaAlma,
-                    SureGun = 14, KisaGerekce = "Yüksek risk nedeniyle acil gözlem altına alma önerilir.",
+                    MahkumId = mid,
+                    KararTarihi = DateTime.Today,
+                    KararTuru = KararTurleri.GozlemAltinaAlma,
+                    SureGun = 14,
+                    KisaGerekce = "Yüksek risk nedeniyle acil gözlem altına alma önerilir.",
                     DetayliGerekce = "Son dönemde artan olaylar ve psikolojik değerlendirme sonuçları doğrultusunda yakın gözlem gereklidir.",
                     GozdenGecirmeTarihi = DateTime.Today.AddDays(14),
-                    GirenKullanici = "yonetici1", GirenRol = "yonetici",
-                    OnayDurumu = OnayDurumlari.Beklemede
+                    OnayDurumu = OnayDurumlari.Beklemede,
+                    IsDemoData = true
                 };
                 yeniKarar.OnayBilgisiOlustur();
                 VeriDepolamaServisi.Instance.KurulKarariKaydet(yeniKarar);

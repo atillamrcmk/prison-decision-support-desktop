@@ -30,7 +30,8 @@
                 </StackPanel>
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right">
                     <Border CornerRadius="8" Padding="16,8"
-                            Background="{Binding Risk.Seviye, Converter={StaticResource RiskRenk}}">
+                            Background="{Binding Risk.Seviye, Converter={StaticResource RiskRenk}}"
+                            ToolTip="Bu skor olay yoğunluğu, şiddet, psikolog ve sağlık verilerine göre hesaplanır. Karar vermez; destek amaçlıdır.">
                         <StackPanel HorizontalAlignment="Center">
                             <TextBlock Text="{Binding Risk.ToplamSkor, StringFormat=F0}" FontSize="28" FontWeight="Bold"
                                        Foreground="White" HorizontalAlignment="Center"/>
@@ -52,7 +53,8 @@
             </Grid.ColumnDefinitions>
 
             <!-- 7-Day Prediction -->
-            <Border Style="{StaticResource CardBorder}" Grid.Column="0" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1,1,1,3">
+            <Border Style="{StaticResource CardBorder}" Grid.Column="0" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1,1,1,3"
+                    ToolTip="Bu tahmin son veriler üzerinden kural tabanlı olarak üretilmiştir; istatistiksel model değildir.">
                 <StackPanel>
                     <TextBlock Text="7 Günlük Risk Tahmini" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}" Margin="0,0,0,12"/>
                     <Grid>
@@ -102,6 +104,8 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+                    <TextBlock TextWrapping="Wrap" FontSize="10" Foreground="{StaticResource TextMutedBrush}" Margin="0,10,0,0"
+                               Text="Bu tahmin son olay ve sağlık verilerine göre kural tabanlıdır; istatistiksel tahmin modeli değildir."/>
                 </StackPanel>
             </Border>
 
@@ -161,6 +165,8 @@
                                     HorizontalAlignment="Left" Width="{Binding Risk.TrendArtisi}" MaxWidth="300"/>
                         </Border>
                     </StackPanel>
+                    <TextBlock TextWrapping="Wrap" FontSize="10" Foreground="{StaticResource TextMutedBrush}" Margin="0,12,0,0"
+                               Text="Risk skoru; olay yoğunluğu, şiddet, psikolog ve revir risk bileşenleri ile trend artışından hesaplanır. Sistem karar vermez; destek amaçlı göstergedir."/>
                 </StackPanel>
             </Border>
         </Grid>
@@ -237,6 +243,53 @@
                 </StackPanel>
             </Border>
         </UniformGrid>
+
+        <!-- Karar etkisi (7 gün penceresi) -->
+        <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1,1,1,3">
+            <StackPanel>
+                <TextBlock Text="Karar etkisi (son kurul kararı)" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}" Margin="0,0,0,8"/>
+                <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,10"
+                           Text="Son kayıtlı kurul kararına göre karar tarihinden önceki 7 gün ile karar ve sonrası 7 gün içindeki disiplin olay sayıları karşılaştırılır."/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                        <TextBlock Text="Karar" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                        <TextBlock Text="{Binding Analiz.KararEtkisi.SonKararTuru}" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                        <TextBlock Text="Önce (7 gün)" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                        <TextBlock Text="{Binding Analiz.KararEtkisi.Oncesi7Gun}" FontSize="20" FontWeight="Bold"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Margin="0,0,8,0">
+                        <TextBlock Text="Sonra (7 gün)" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                        <TextBlock Text="{Binding Analiz.KararEtkisi.Sonrasi7Gun}" FontSize="20" FontWeight="Bold"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="3">
+                        <TextBlock Text="Etki özeti" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                        <TextBlock Text="{Binding Analiz.KararEtkisi.EtkiSonuc7Gun}" FontSize="14" FontWeight="SemiBold">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Analiz.KararEtkisi.EtkiSonuc7Gun}" Value="Olumlu">
+                                            <Setter Property="Foreground" Value="{StaticResource SuccessBrush}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Analiz.KararEtkisi.EtkiSonuc7Gun}" Value="Olumsuz">
+                                            <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
 
         <!-- Pattern Analysis Card -->
         <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12">
@@ -405,6 +458,8 @@
         <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1,1,4,1">
             <StackPanel>
                 <TextBlock Text="Sistem Değerlendirmesi" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}" Margin="0,0,0,8"/>
+                <TextBlock Text="{Binding Analiz.SistemYorumuMetni}" FontSize="13" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,12"
+                           Foreground="{StaticResource TextBrush}"/>
                 <ItemsControl ItemsSource="{Binding Analiz.SistemOzeti}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
@@ -414,6 +469,41 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+            </StackPanel>
+        </Border>
+
+        <!-- Zaman akışı -->
+        <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock Text="Zaman akışı" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,12"
+                           Text="Disiplin, psikolog ve revir kayıtları birleştirilerek kronolojik gösterilir (en fazla 15 kayıt)."/>
+                <ItemsControl ItemsSource="{Binding ZamanAkisi}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Width="10" Height="10" CornerRadius="5" VerticalAlignment="Top" Margin="0,4,0,0"
+                                        Background="{StaticResource AccentBrush}"/>
+                                <Border Grid.Column="1" Width="2" Background="#E2E8F0" VerticalAlignment="Stretch" HorizontalAlignment="Center"/>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock FontSize="11" Foreground="{StaticResource TextMutedBrush}">
+                                        <Run Text="{Binding TarihMetni, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding Kaynak, Mode=OneWay}" FontWeight="SemiBold"/>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding Baslik}" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding Detay}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Border Background="#F8FAFC" CornerRadius="6" Padding="10,8" Margin="0,8,0,0">
+                    <TextBlock Text="{Binding ZamanAkisiSonuc}" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" Foreground="#334155"/>
+                </Border>
             </StackPanel>
         </Border>
 

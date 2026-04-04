@@ -9,6 +9,81 @@
     </UserControl.Resources>
 
     <StackPanel MinWidth="860">
+        <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12" Visibility="{Binding VeriBos, Converter={StaticResource BoolToVis}}">
+            <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextMutedBrush}"
+                       Text="Kayıtlı mahkum bulunmuyor. Pilot öncesi eğitim için «Demo verisi yükle» düğmesini kullanabilirsiniz; üretim ortamında mahkumları Mahkum Yönetimi üzerinden oluşturun."/>
+        </Border>
+        <Border Background="#E0F2FE" BorderBrush="#7DD3FC" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,0,8"
+                Visibility="{Binding Yukleniyor, Converter={StaticResource BoolToVis}}">
+            <TextBlock Text="Veriler yenileniyor, lütfen bekleyin…" FontSize="12" Foreground="#0369A1"/>
+        </Border>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Button Content="Verileri yenile" Command="{Binding YenileCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,8,0"/>
+            <Button Content="Demo verisi yükle" Command="{Binding DemoYukleCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
+            <Button Content="Demo verisini temizle" Command="{Binding DemoTemizleCommand}" Style="{StaticResource DangerButton}"/>
+        </StackPanel>
+        <TextBlock Text="{Binding SonYenilemeMetni}" FontSize="10" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,2"/>
+        <TextBlock Text="{Binding OperasyonelOzet}" FontSize="10" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+        <!-- Kritik uyarılar (varsayılan kapalı) -->
+        <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12" Padding="4,2,8,8">
+            <Expander IsExpanded="False" Background="Transparent">
+                <Expander.Header>
+                    <TextBlock Text="{Binding KritikUyariBaslik}" FontSize="13" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextBrush}"/>
+                </Expander.Header>
+                <StackPanel Margin="0,4,0,0">
+                    <TextBlock Text="Şu an kural tabanlı tespit edilen kritik uyarı yok." FontSize="12" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,8"
+                               Visibility="{Binding KritikUyariBos, Converter={StaticResource BoolToVis}}"/>
+                    <ItemsControl ItemsSource="{Binding KritikUyarilar}" Visibility="{Binding KritikUyariBos, Converter={StaticResource InvBoolToVis}}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,0,8" Padding="12,10" CornerRadius="6"
+                                        BorderThickness="1,1,1,3">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#FFFBEB"/>
+                                            <Setter Property="BorderBrush" Value="#F59E0B"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Seviye}" Value="kritik">
+                                                    <Setter Property="Background" Value="#FEF2F2"/>
+                                                    <Setter Property="BorderBrush" Value="#DC2626"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding SatirMetni}" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                            <TextBlock FontSize="10" Foreground="{StaticResource TextMutedBrush}" Margin="0,4,0,0">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="Uyarı"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Seviye}" Value="kritik">
+                                                                <Setter Property="Text" Value="Kritik"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
+                                        <Button Grid.Column="1" Content="Detay" Style="{StaticResource SmallButton}" VerticalAlignment="Center"
+                                                Command="{Binding DataContext.DetayCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding MahkumId}"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Expander>
+        </Border>
+
         <!-- Summary Cards Row -->
         <UniformGrid Columns="4" Margin="0,0,0,12">
             <!-- Toplam Mahkum -->

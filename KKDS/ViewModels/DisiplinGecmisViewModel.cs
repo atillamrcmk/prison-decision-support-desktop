@@ -23,7 +23,8 @@ namespace KKDS.ViewModels
         public DisiplinGecmisViewModel()
         {
             TemizleCommand = new RelayCommand(() => { AramaMetni = ""; BaslangicTarihi = null; BitisTarihi = null; });
-            Filtrele();
+            YetkiServisi.ViewModelKoruma(this, Roller.Disiplin);
+            if (!YetkisizMod) Filtrele();
         }
 
         private void Filtrele()

@@ -72,15 +72,21 @@
             </Border>
 
             <!-- Main content -->
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Padding="16,12">
-                <ContentControl Content="{Binding CurrentView}"/>
-            </ScrollViewer>
+            <Grid Grid.Row="1">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Padding="16,12">
+                    <ContentControl Content="{Binding CurrentView}"/>
+                </ScrollViewer>
+                <Border Background="#F3F6FA" Padding="28" Visibility="{Binding CurrentView.YetkisizMod, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}">
+                    <TextBlock Text="{Binding CurrentView.YetkisizAciklama}" TextWrapping="Wrap" FontSize="14"
+                               Foreground="{StaticResource TextBrush}" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center"/>
+                </Border>
+            </Grid>
 
             <!-- Status bar -->
             <Border Grid.Row="2" Background="White" Padding="12,4" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0"
                     Visibility="{Binding GirisYapildi, Converter={StaticResource BoolToVis}}">
                 <DockPanel>
-                    <TextBlock Text="KKDS Pilot v1.0 — Paylaşımlı Klasör: C:\Paylasim_KKDS" FontSize="10" Foreground="{StaticResource TextMutedBrush}" DockPanel.Dock="Left" VerticalAlignment="Center"/>
+                    <TextBlock Text="KKDS Pilot — Veri klasörü: Ayarlar menüsünden yapılandırılır (JSON depolama)" FontSize="10" Foreground="{StaticResource TextMutedBrush}" DockPanel.Dock="Left" VerticalAlignment="Center"/>
                     <TextBlock Text="Offline Mod" FontSize="10" Foreground="{StaticResource SuccessBrush}" DockPanel.Dock="Right" VerticalAlignment="Center" HorizontalAlignment="Right" FontWeight="SemiBold"/>
                 </DockPanel>
             </Border>

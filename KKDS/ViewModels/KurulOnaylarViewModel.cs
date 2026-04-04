@@ -57,11 +57,12 @@ namespace KKDS.ViewModels
 
         public KurulOnaylarViewModel()
         {
+            YetkiServisi.ViewModelKoruma(this, Roller.Psikolog, Roller.Revir, Roller.Disiplin, Roller.Yonetici);
             _aktifRol = OturumBilgisi.Instance.Rol;
             OnaylaCommand = new RelayCommand(Onayla, () => SeciliKarar?.BenOnayBekliyor == true);
             ReddetCommand = new RelayCommand(Reddet, () => SeciliKarar?.BenOnayBekliyor == true);
             KararSecCommand = new RelayCommand(p => KararSec(p));
-            Yukle();
+            if (!YetkisizMod) Yukle();
         }
 
         private void Yukle()

@@ -5,6 +5,7 @@
     <StackPanel MinWidth="860">
         <!-- Summary Band -->
         <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12" Padding="20">
+            <StackPanel>
             <StackPanel Orientation="Horizontal">
                 <StackPanel Margin="0,0,32,0">
                     <TextBlock Text="Kurul Toplantısı" FontSize="16" FontWeight="Bold"/>
@@ -29,6 +30,9 @@
                         <Run Text="Stabil: "/><Run Text="{Binding StabilSayisi, Mode=OneWay}"/>
                     </TextBlock>
                 </Border>
+            </StackPanel>
+            <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,12,0,0"
+                       Text="Öncelik sınıfı; risk analizi, olay yoğunluğu, psikolog/revir durumu ve kurul kararı etkisine göre kural tabanlıdır. Yüksek, orta veya düşük etiketi otomatik karar değildir; listedeki nedenler özet bilgidir."/>
             </StackPanel>
         </Border>
 
@@ -83,7 +87,7 @@
                                     </StackPanel>
                                 </Border>
 
-                                <TextBlock Text="{Binding SistemOzeti}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" FontStyle="Italic"/>
+                                <TextBlock Text="{Binding SistemYorumuMetni}" FontSize="12" Foreground="{StaticResource TextBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                             </StackPanel>
 
                             <!-- Risk Badge + Detail Button -->
@@ -148,7 +152,7 @@
                                     </StackPanel>
                                 </UniformGrid>
 
-                                <TextBlock Text="{Binding SistemOzeti}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" FontStyle="Italic"/>
+                                <TextBlock Text="{Binding SistemYorumuMetni}" FontSize="12" Foreground="{StaticResource TextBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="1" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="12,0,0,0">
@@ -187,8 +191,8 @@
                                 <TextBlock FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextMutedBrush}">
                                     <Run Text="Risk: "/><Run Text="{Binding RiskSkoru, Mode=OneWay, StringFormat=F0}"/>
                                 </TextBlock>
-                                <TextBlock Text="{Binding SistemOzeti}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="16,0,0,0"
-                                           TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" MaxWidth="400" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding SistemYorumuMetni}" FontSize="12" Foreground="{StaticResource TextBrush}" Margin="16,0,0,0"
+                                           TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" MaxWidth="400" VerticalAlignment="Center"/>
                             </StackPanel>
 
                             <Button Grid.Column="1" Content="Detay" Style="{StaticResource SmallButton}"

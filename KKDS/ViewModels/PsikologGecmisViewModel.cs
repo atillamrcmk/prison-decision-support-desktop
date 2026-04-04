@@ -26,7 +26,8 @@ namespace KKDS.ViewModels
         {
             FiltreleCommand = new RelayCommand(Filtrele);
             TemizleCommand = new RelayCommand(() => { AramaMetni = ""; BaslangicTarihi = null; BitisTarihi = null; });
-            Filtrele();
+            YetkiServisi.ViewModelKoruma(this, Roller.Psikolog);
+            if (!YetkisizMod) Filtrele();
         }
 
         private void Filtrele()

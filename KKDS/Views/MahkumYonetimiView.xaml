@@ -67,10 +67,14 @@
 
         <Border Style="{StaticResource CardBorder}" Grid.Row="1">
             <StackPanel>
-                <DockPanel Margin="0,0,0,8">
-                    <TextBlock Text="Mahkum Listesi" FontSize="13" FontWeight="SemiBold" DockPanel.Dock="Left"/>
-                    <TextBox Text="{Binding AramaMetni, UpdateSourceTrigger=PropertyChanged}" Width="200" DockPanel.Dock="Right" HorizontalAlignment="Right"/>
-                    <TextBlock Text="Ara:" FontSize="11" Foreground="{StaticResource TextMutedBrush}" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <DockPanel Margin="0,0,0,8" LastChildFill="False">
+                    <TextBlock Text="Mahkum Listesi" FontSize="13" FontWeight="SemiBold" DockPanel.Dock="Left" VerticalAlignment="Center"/>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                        <CheckBox Content="Pasif kayıtlar" IsChecked="{Binding PasifKayitlariGoster}" Margin="0,0,12,0" FontSize="11" VerticalAlignment="Center"/>
+                        <CheckBox Content="Demo kayıtlar" IsChecked="{Binding DemoKayitlariGoster}" Margin="0,0,16,0" FontSize="11" VerticalAlignment="Center"/>
+                        <TextBlock Text="Ara:" FontSize="11" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBox Text="{Binding AramaMetni, UpdateSourceTrigger=PropertyChanged}" Width="200" VerticalAlignment="Center"/>
+                    </StackPanel>
                 </DockPanel>
                 <DataGrid ItemsSource="{Binding MahkumListesi}" MaxHeight="400" SelectionMode="Single"
                           MouseDoubleClick="Grid_MouseDoubleClick">

@@ -1,5 +1,7 @@
 using System.Windows;
+using QuestPDF;
 using QuestPDF.Infrastructure;
+using KKDS.Services;
 
 namespace KKDS
 {
@@ -7,7 +9,8 @@ namespace KKDS
     {
         protected override void OnStartup(StartupEventArgs e)
         {
-            QuestPDF.Settings.License = LicenseType.Community;
+            Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+            UygulamaAyarlariServisi.Instance.Yukle();
             base.OnStartup(e);
         }
     }

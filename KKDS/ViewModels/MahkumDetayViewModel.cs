@@ -70,12 +70,14 @@ namespace KKDS.ViewModels
         public ObservableCollection<PsikologDegerlendirme> PsikologKayitlari { get; } = new();
         public ObservableCollection<RevirKaydi> RevirKayitlari { get; } = new();
         public ObservableCollection<KurulKarari> KurulKararlari { get; } = new();
+        public ObservableCollection<ZamanAkisiOgesi> ZamanAkisi { get; } = new();
 
         public int ToplamOlay { get; set; }
         public int KararOncesiOlay { get; set; }
         public int KararSonrasiOlay { get; set; }
         public string PsikologDurum { get; set; } = "-";
         public string RevirDurum { get; set; } = "-";
+        public string ZamanAkisiSonuc { get; set; } = "";
 
         public ICommand GeriCommand { get; }
         public ICommand SekmeCommand { get; }
@@ -91,8 +93,8 @@ namespace KKDS.ViewModels
                     SeciliSekme = idx;
             });
             DisaAktarPdfCommand = new RelayCommand(_ => DisaAktarPdf());
-
-            Yukle(mahkumId);
+            YetkiServisi.ViewModelKoruma(this, Roller.Yonetici);
+            if (!YetkisizMod) Yukle(mahkumId);
         }
 
         private void DisaAktarPdf()
@@ -118,6 +120,8 @@ namespace KKDS.ViewModels
                     Olaylar = Olaylar.OrderByDescending(o => o.OlayTarihi).ToList()
                 };
                 MahkumDetayPdfServisi.Olustur(dlg.FileName, veri);
+                LogServisi.Instance.KritikIslem(LogIslemTipleri.RaporPdf, OturumBilgisi.Instance.KullaniciAdi, OturumBilgisi.Instance.Rol,
+                    "pdf", Mahkum.MahkumKodu, $"Mahkum detay PDF: {dlg.FileName}");
                 MessageBox.Show($"PDF kaydedildi:\n{dlg.FileName}", "Dışa aktar", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
@@ -133,7 +137,7 @@ namespace KKDS.ViewModels
             var tahminServisi = TahminServisi.Instance;
             var riskServisi = RiskServisi.Instance;
 
-            Mahkum = veri.Mahkumlar.FirstOrDefault(m => m.Id == mahkumId) ?? new Mahkum();
+            Mahkum = veri.MahkumBulById(mahkumId) ?? new Mahkum();
             Analiz = analizServisi.TamAnaliz(mahkumId);
             Tahmin = tahminServisi.YediGunlukTahmin(mahkumId);
             Risk = riskServisi.RiskSkoruHesapla(mahkumId);
@@ -167,6 +171,32 @@ namespace KKDS.ViewModels
             RevirDurum = sonRevir != null
                 ? $"Uyku: {sonRevir.UykuDurumu}, Stres: {sonRevir.StresSeviyesi}/5"
                 : "Kayıt yok";
+
+            ZamanAkisi.Clear();
+            var birlesik = new List<(DateTime t, string kaynak, string baslik, string detay)>();
+            foreach (var o in olaylar)
+                birlesik.Add((o.OlayTarihi, "Disiplin", o.OlayTuru, $"Şiddet {o.Siddet} · {Kisalt(o.Aciklama, 80)}"));
+            foreach (var p in veri.MahkumPsikolog(mahkumId))
+                birlesik.Add((p.DegerlendirmeTarihi, "Psikolog", p.OncekiDurumaGore, $"{p.RuhHali} · agresyon {p.AgresyonDuzeyi}"));
+            foreach (var r in veri.MahkumRevir(mahkumId))
+                birlesik.Add((r.KayitTarihi, "Revir", $"Uyku {r.UykuDurumu}", $"Stres {r.StresSeviyesi}/5 · {r.DavranisEtkisi} · {Kisalt(r.Aciklama, 60)}"));
+
+            foreach (var x in birlesik.OrderByDescending(x => x.t).Take(15).OrderBy(x => x.t))
+                ZamanAkisi.Add(new ZamanAkisiOgesi { Tarih = x.t, Kaynak = x.kaynak, Baslik = x.baslik, Detay = x.detay });
+
+            if (Analiz.Egilim == "artiyor")
+                ZamanAkisiSonuc = "Son dönemde olay yoğunluğu artmaktadır.";
+            else if (birlesik.Count(x => x.kaynak == "Disiplin" && x.t >= DateTime.Today.AddDays(-14)) >= 4)
+                ZamanAkisiSonuc = "Son iki haftada disiplin kayıtları üst üste gelmektedir; yakın izleme önerilir.";
+            else
+                ZamanAkisiSonuc = "Zaman akışı kayıtları gözlemlendi; üst bölümdeki eğilim ve risk özeti birlikte değerlendirilmelidir.";
+        }
+
+        private static string Kisalt(string? s, int max)
+        {
+            if (string.IsNullOrWhiteSpace(s)) return "—";
+            s = s.Replace('\r', ' ').Replace('\n', ' ');
+            return s.Length <= max ? s : s[..(max - 1)] + "…";
         }
 
         private void GuncelleTrendSerisi()
@@ -181,5 +211,14 @@ namespace KKDS.ViewModels
     {
         public string Tur { get; set; } = "";
         public int Sayi { get; set; }
+    }
+
+    public class ZamanAkisiOgesi
+    {
+        public DateTime Tarih { get; set; }
+        public string Kaynak { get; set; } = "";
+        public string Baslik { get; set; } = "";
+        public string Detay { get; set; } = "";
+        public string TarihMetni => Tarih.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"));
     }
 }

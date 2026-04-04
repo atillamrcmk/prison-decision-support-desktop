@@ -13,10 +13,28 @@ namespace KKDS.Services
         public string Rol => AktifKullanici?.Rol ?? "";
         public string AdSoyad => AktifKullanici?.AdSoyad ?? "";
 
-        public void MetaDoldur(BaseKayit kayit)
+        /// <summary>Yeni kayıt oluştururken veya ilk kayıtta çağrılır.</summary>
+        public void MetaDoldurYeni(BaseKayit kayit)
         {
-            kayit.GirenKullanici = KullaniciAdi;
-            kayit.GirenRol = Rol;
+            var u = KullaniciAdi;
+            var r = Rol;
+            kayit.GirenKullanici = u;
+            kayit.GirenRol = r;
+            kayit.OlusturanKullanici = u;
+            kayit.GuncelleyenKullanici = u;
+            kayit.OlusturmaZamani = System.DateTime.Now;
+            kayit.GuncellemeZamani = System.DateTime.Now;
+        }
+
+        /// <summary>Mevcut kayıt güncellenirken veya pasife alınırken.</summary>
+        public void MetaGuncelle(BaseKayit kayit)
+        {
+            var u = KullaniciAdi;
+            var r = Rol;
+            kayit.GirenKullanici = u;
+            kayit.GirenRol = r;
+            kayit.GuncelleyenKullanici = u;
+            kayit.GuncellemeZamani = System.DateTime.Now;
         }
     }
 }

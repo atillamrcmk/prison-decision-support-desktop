@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using KKDS.Helpers;
@@ -51,7 +52,6 @@ namespace KKDS.ViewModels
             GirisYapildi = true;
             LogServisi.Instance.Giris(k.KullaniciAdi, k.Rol);
 
-            TestVeriOlusturucu.Olustur();
             VeriDepolamaServisi.Instance.TumVerileriYukle();
 
             MenuOlustur(k.Rol);
@@ -71,35 +71,44 @@ namespace KKDS.ViewModels
             switch (rol)
             {
                 case Roller.Psikolog:
-                    MenuItems.Add(new MenuItem { Baslik = "Yeni Değerlendirme", Ikon = "📝", Komut = new RelayCommand(() => Navigate<PsikologFormViewModel>("Yeni Değerlendirme")) });
-                    MenuItems.Add(new MenuItem { Baslik = "Geçmiş Değerlendirmeler", Ikon = "📋", Komut = new RelayCommand(() => Navigate<PsikologGecmisViewModel>("Geçmiş Değerlendirmeler")) });
-                    MenuItems.Add(new MenuItem { Baslik = "Kurul Kararları", Ikon = "⚖️", Komut = new RelayCommand(() => Navigate<KurulOnaylarViewModel>("Kurul Kararları")) });
-                    MenuItems.Add(new MenuItem { Baslik = "Mahkum Ara", Ikon = "🔍", Komut = new RelayCommand(() => Navigate<MahkumAraViewModel>("Mahkum Ara")) });
+                    MenuItems.Add(M("Yeni Değerlendirme", () => Navigate<PsikologFormViewModel>("Yeni Değerlendirme")));
+                    MenuItems.Add(M("Geçmiş Değerlendirmeler", () => Navigate<PsikologGecmisViewModel>("Geçmiş Değerlendirmeler")));
+                    MenuItems.Add(M("Kurul Kararları", () => Navigate<KurulOnaylarViewModel>("Kurul Kararları")));
+                    MenuItems.Add(M("Mahkum Ara", () => Navigate<MahkumAraViewModel>("Mahkum Ara")));
                     break;
                 case Roller.Revir:
-                    MenuItems.Add(new MenuItem { Baslik = "Yeni Revir Kaydı", Ikon = "📝", Komut = new RelayCommand(() => Navigate<RevirFormViewModel>("Yeni Revir Kaydı")) });
-                    MenuItems.Add(new MenuItem { Baslik = "Geçmiş Revir Kayıtları", Ikon = "📋", Komut = new RelayCommand(() => Navigate<RevirGecmisViewModel>("Geçmiş Revir Kayıtları")) });
-                    MenuItems.Add(new MenuItem { Baslik = "Kurul Kararları", Ikon = "⚖️", Komut = new RelayCommand(() => Navigate<KurulOnaylarViewModel>("Kurul Kararları")) });
-                    MenuItems.Add(new MenuItem { Baslik = "Mahkum Ara", Ikon = "🔍", Komut = new RelayCommand(() => Navigate<MahkumAraViewModel>("Mahkum Ara")) });
+                    MenuItems.Add(M("Yeni Revir Kaydı", () => Navigate<RevirFormViewModel>("Yeni Revir Kaydı")));
+                    MenuItems.Add(M("Geçmiş Revir Kayıtları", () => Navigate<RevirGecmisViewModel>("Geçmiş Revir Kayıtları")));
+                    MenuItems.Add(M("Kurul Kararları", () => Navigate<KurulOnaylarViewModel>("Kurul Kararları")));
+                    MenuItems.Add(M("Mahkum Ara", () => Navigate<MahkumAraViewModel>("Mahkum Ara")));
                     break;
                 case Roller.Disiplin:
-                    MenuItems.Add(new MenuItem { Baslik = "Yeni Olay Kaydı", Ikon = "📝", Komut = new RelayCommand(() => Navigate<DisiplinFormViewModel>("Yeni Olay Kaydı")) });
-                    MenuItems.Add(new MenuItem { Baslik = "Olay Kayıtları", Ikon = "📋", Komut = new RelayCommand(() => Navigate<DisiplinGecmisViewModel>("Olay Kayıtları")) });
-                    MenuItems.Add(new MenuItem { Baslik = "Kurul Kararları", Ikon = "⚖️", Komut = new RelayCommand(() => Navigate<KurulOnaylarViewModel>("Kurul Kararları")) });
-                    MenuItems.Add(new MenuItem { Baslik = "Mahkum Ara", Ikon = "🔍", Komut = new RelayCommand(() => Navigate<MahkumAraViewModel>("Mahkum Ara")) });
+                    MenuItems.Add(M("Yeni Olay Kaydı", () => Navigate<DisiplinFormViewModel>("Yeni Olay Kaydı")));
+                    MenuItems.Add(M("Olay Kayıtları", () => Navigate<DisiplinGecmisViewModel>("Olay Kayıtları")));
+                    MenuItems.Add(M("Kurul Kararları", () => Navigate<KurulOnaylarViewModel>("Kurul Kararları")));
+                    MenuItems.Add(M("Mahkum Ara", () => Navigate<MahkumAraViewModel>("Mahkum Ara")));
                     break;
                 case Roller.Yonetici:
-                    MenuItems.Add(new MenuItem { Baslik = "Gösterge Paneli", Ikon = "📊", Komut = new RelayCommand(DashboardGit) });
-                    MenuItems.Add(new MenuItem { Baslik = "Mahkum Listesi", Ikon = "👥", Komut = new RelayCommand(() => Navigate(() => new MahkumListeViewModel(this), "Mahkum Listesi")) });
-                    MenuItems.Add(new MenuItem { Baslik = "Kurul Değerlendirme", Ikon = "⚖️", Komut = new RelayCommand(() => Navigate(() => new KurulViewModel(this), "Kurul Değerlendirme")) });
-                    MenuItems.Add(new MenuItem { Baslik = "Yeni Kurul Kararı", Ikon = "📜", Komut = new RelayCommand(() => Navigate<KurulKarariFormViewModel>("Yeni Kurul Kararı")) });
-                    MenuItems.Add(new MenuItem { Baslik = "Karar Onay Takibi", Ikon = "✅", Komut = new RelayCommand(() => Navigate<KurulOnaylarViewModel>("Karar Onay Takibi")) });
-                    MenuItems.Add(new MenuItem { Baslik = "Tüm Kayıtlar", Ikon = "🗂️", Komut = new RelayCommand(() => Navigate<TumKayitlarViewModel>("Tüm Kayıtlar")) });
-                    MenuItems.Add(new MenuItem { Baslik = "Mahkum Yönetimi", Ikon = "⚙️", Komut = new RelayCommand(() => Navigate<MahkumYonetimiViewModel>("Mahkum Yönetimi")) });
-                    MenuItems.Add(new MenuItem { Baslik = "Kullanıcı Yönetimi", Ikon = "👤", Komut = new RelayCommand(() => Navigate<KullaniciYonetimiViewModel>("Kullanıcı Yönetimi")) });
+                    MenuItems.Add(M("Gösterge Paneli", DashboardGit));
+                    MenuItems.Add(M("Mahkum Listesi", () => Navigate(() => new MahkumListeViewModel(this), "Mahkum Listesi")));
+                    MenuItems.Add(M("Kurul Değerlendirme", () => Navigate(() => new KurulViewModel(this), "Kurul Değerlendirme")));
+                    MenuItems.Add(M("Yeni Kurul Kararı", () => Navigate<KurulKarariFormViewModel>("Yeni Kurul Kararı")));
+                    MenuItems.Add(M("Karar Onay Takibi", () => Navigate<KurulOnaylarViewModel>("Karar Onay Takibi")));
+                    MenuItems.Add(M("Tüm Kayıtlar", () => Navigate<TumKayitlarViewModel>("Tüm Kayıtlar")));
+                    MenuItems.Add(M("Mahkum Yönetimi", () => Navigate<MahkumYonetimiViewModel>("Mahkum Yönetimi")));
+                    MenuItems.Add(M("Kullanıcı Yönetimi", () => Navigate<KullaniciYonetimiViewModel>("Kullanıcı Yönetimi")));
+                    MenuItems.Add(M("Veri Klasörü Ayarı", () => Navigate<VeriAyarlariViewModel>("Veri Klasörü Ayarı")));
+                    MenuItems.Add(M("Sistem Günlükleri", () => Navigate<SistemLoglariViewModel>("Sistem Günlükleri")));
                     break;
             }
         }
+
+        private static MenuItem M(string baslik, Action a) => new()
+        {
+            Baslik = baslik,
+            Ikon = "",
+            Komut = new RelayCommand(a)
+        };
 
         private void Navigate<T>(string baslik) where T : BaseViewModel, new()
         {

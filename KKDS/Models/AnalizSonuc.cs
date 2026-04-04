@@ -13,6 +13,8 @@ namespace KKDS.Models
         public UyumAnalizi Uyum { get; set; } = new();
         public RiskBoyutlari RiskBoyutlari { get; set; } = new();
         public List<string> SistemOzeti { get; set; } = new();
+        /// <summary>2–4 cümlelik doğal dil özeti (tekrarsız).</summary>
+        public string SistemYorumuMetni { get; set; } = "";
         public List<string> OncelikNedenleri { get; set; } = new();
     }
 
@@ -42,6 +44,12 @@ namespace KKDS.Models
         public string SonKararTuru { get; set; } = string.Empty;
         public int OncesiOlaySayisi { get; set; }
         public int SonrasiOlaySayisi { get; set; }
+        /// <summary>Karar tarihinden önceki 7 gün (karar günü hariç) disiplin olayı.</summary>
+        public int Oncesi7Gun { get; set; }
+        /// <summary>Karar tarihi ve sonraki 7 gün içindeki disiplin olayı.</summary>
+        public int Sonrasi7Gun { get; set; }
+        /// <summary>Olumlu / Olumsuz / Nötr — 7 günlük pencere karşılaştırması.</summary>
+        public string EtkiSonuc7Gun { get; set; } = "Nötr";
     }
 
     public class UyumAnalizi

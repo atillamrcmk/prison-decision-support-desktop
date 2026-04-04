@@ -137,9 +137,13 @@ namespace KKDS.Services
                                 column.Item().Text("• " + satir).FontSize(8);
                         }
 
-                        column.Item().PaddingTop(12).AlignCenter().Text(
-                                "Bu belge KKDS uygulamasından üretilmiştir; resmi kayıt yerine geçmez.")
-                            .FontSize(8).Italic().FontColor(Colors.Grey.Medium);
+                        column.Item().PaddingTop(12).AlignCenter().Column(uyari =>
+                        {
+                            uyari.Item().Text("Bu çıktı karar destek amaçlıdır. Nihai değerlendirme ilgili kurul tarafından yapılır.")
+                                .FontSize(9).Italic().FontColor(Colors.Grey.Darken2);
+                            uyari.Item().PaddingTop(4).Text("Bu belge KKDS uygulamasından üretilmiştir; resmi kayıt yerine geçmez.")
+                                .FontSize(8).Italic().FontColor(Colors.Grey.Medium);
+                        });
                     });
 
                     page.Footer().AlignCenter().DefaultTextStyle(x => x.FontSize(8).FontColor(Colors.Grey.Medium))

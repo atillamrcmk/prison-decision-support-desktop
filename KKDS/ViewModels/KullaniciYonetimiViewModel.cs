@@ -55,7 +55,8 @@ namespace KKDS.ViewModels
             TemizleCommand = new RelayCommand(Temizle);
             SilCommand = new RelayCommand(Sil, () => DuzenleModu);
             SecCommand = new RelayCommand(p => Sec(p));
-            ListeYenile();
+            YetkiServisi.ViewModelKoruma(this, Roller.Yonetici);
+            if (!YetkisizMod) ListeYenile();
         }
 
         private void ListeYenile()

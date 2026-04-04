@@ -52,6 +52,7 @@ namespace KKDS.ViewModels
             TemizleCommand = new RelayCommand(Temizle);
             SilCommand = new RelayCommand(Sil, () => DuzenleModu);
             KayitSecCommand = new RelayCommand(p => KayitSec(p));
+            YetkiServisi.ViewModelKoruma(this, Roller.Disiplin);
         }
 
         private void MahkumDegisti()
@@ -64,9 +65,17 @@ namespace KKDS.ViewModels
 
         private void Kaydet()
         {
+            var hata = FormDogrulama.Birlestir(
+                FormDogrulama.MahkumKoduKontrol(MahkumKodu),
+                FormDogrulama.TarihKontrol(Tarih, "Olay tarihi"),
+                FormDogrulama.ComboZorunlu(OlayTuru, "Olay türü"),
+                FormDogrulama.ComboZorunlu(Hedef, "Hedef"),
+                FormDogrulama.ComboZorunlu(ZamanDilimi, "Zaman dilimi"),
+                FormDogrulama.AciklamaUzunluk(Aciklama));
+            if (!string.IsNullOrEmpty(hata)) { Msg(hata, true); return; }
+
             var m = VeriDepolamaServisi.Instance.MahkumBul(MahkumKodu);
             if (m == null) { Msg("Mahkum bulunamadı.", true); return; }
-            if (string.IsNullOrEmpty(OlayTuru)) { Msg("Olay türü seçilmelidir.", true); return; }
             var o = new Olay
             {
                 MahkumId = m.Id, OlayTarihi = Tarih, OlayTuru = OlayTuru,

@@ -52,6 +52,7 @@ namespace KKDS.ViewModels
             TemizleCommand = new RelayCommand(Temizle);
             SilCommand = new RelayCommand(Sil, () => DuzenleModu);
             KayitSecCommand = new RelayCommand(p => KayitSec(p));
+            YetkiServisi.ViewModelKoruma(this, Roller.Revir);
         }
 
         private void MahkumDegisti()
@@ -64,6 +65,15 @@ namespace KKDS.ViewModels
 
         private void Kaydet()
         {
+            var hata = FormDogrulama.Birlestir(
+                FormDogrulama.MahkumKoduKontrol(MahkumKodu),
+                FormDogrulama.TarihKontrol(Tarih, "Kayıt tarihi"),
+                FormDogrulama.ComboZorunlu(UykuDurumu, "Uyku durumu"),
+                FormDogrulama.ComboZorunlu(IlacUyumu, "İlaç uyumu"),
+                FormDogrulama.ComboZorunlu(DavranisEtkisi, "Davranış etkisi"),
+                FormDogrulama.AciklamaUzunluk(Aciklama));
+            if (!string.IsNullOrEmpty(hata)) { Msg(hata, true); return; }
+
             var m = VeriDepolamaServisi.Instance.MahkumBul(MahkumKodu);
             if (m == null) { Msg("Mahkum bulunamadı.", true); return; }
             var rk = new RevirKaydi
