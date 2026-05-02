@@ -518,6 +518,8 @@
                     <Button Content="Revir" Command="{Binding SekmeCommand}" CommandParameter="2"
                             Style="{StaticResource SecondaryButton}" Margin="0,0,4,0"/>
                     <Button Content="Kurul Kararları" Command="{Binding SekmeCommand}" CommandParameter="3"
+                            Style="{StaticResource SecondaryButton}" Margin="0,0,4,0"/>
+                    <Button Content="112 Acil" Command="{Binding SekmeCommand}" CommandParameter="4"
                             Style="{StaticResource SecondaryButton}"/>
                 </StackPanel>
 
@@ -605,6 +607,27 @@
                         <DataGridTextColumn Header="Karar Türü" Binding="{Binding KararTuru}"/>
                         <DataGridTextColumn Header="Süre (Gün)" Binding="{Binding SureGun}"/>
                         <DataGridTextColumn Header="Gerekçe" Binding="{Binding KisaGerekce}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- Tab 4: 112 Acil yardım -->
+                <DataGrid ItemsSource="{Binding Acil112Kayitlari}" MaxHeight="300">
+                    <DataGrid.Style>
+                        <Style TargetType="DataGrid" BasedOn="{StaticResource {x:Type DataGrid}}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SeciliSekme}" Value="4">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.Style>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Çağrı zamanı" Binding="{Binding CagriZamani, StringFormat=dd.MM.yyyy HH:mm}"/>
+                        <DataGridTextColumn Header="Olay vardiyası" Binding="{Binding Vardiya}"/>
+                        <DataGridTextColumn Header="112 arayan" Binding="{Binding CagiranVardiya}"/>
+                        <DataGridTextColumn Header="Şikâyet" Binding="{Binding Sikayet}"/>
+                        <DataGridTextColumn Header="Not" Binding="{Binding Notlar}"/>
                     </DataGrid.Columns>
                 </DataGrid>
             </StackPanel>

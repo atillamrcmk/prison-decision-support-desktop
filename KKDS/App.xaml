@@ -38,6 +38,8 @@
             <DataTemplate DataType="{x:Type vm:KullaniciYonetimiViewModel}"><views:KullaniciYonetimiView/></DataTemplate>
             <DataTemplate DataType="{x:Type vm:VeriAyarlariViewModel}"><views:VeriAyarlariView/></DataTemplate>
             <DataTemplate DataType="{x:Type vm:SistemLoglariViewModel}"><views:SistemLoglariView/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:KurumKogusAnalizViewModel}"><views:KurumKogusAnalizView/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:Acil112KayitViewModel}"><views:Acil112KayitView/></DataTemplate>
 
             <!-- Colors -->
             <SolidColorBrush x:Key="PrimaryBrush" Color="#1B2A4A"/>

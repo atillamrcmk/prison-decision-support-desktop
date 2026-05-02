@@ -70,6 +70,7 @@ namespace KKDS.ViewModels
         public ObservableCollection<PsikologDegerlendirme> PsikologKayitlari { get; } = new();
         public ObservableCollection<RevirKaydi> RevirKayitlari { get; } = new();
         public ObservableCollection<KurulKarari> KurulKararlari { get; } = new();
+        public ObservableCollection<Acil112CagriKaydi> Acil112Kayitlari { get; } = new();
         public ObservableCollection<ZamanAkisiOgesi> ZamanAkisi { get; } = new();
 
         public int ToplamOlay { get; set; }
@@ -155,6 +156,7 @@ namespace KKDS.ViewModels
             foreach (var o in olaylar) Olaylar.Add(o);
             foreach (var p in veri.MahkumPsikolog(mahkumId)) PsikologKayitlari.Add(p);
             foreach (var r in veri.MahkumRevir(mahkumId)) RevirKayitlari.Add(r);
+            foreach (var a in veri.MahkumAcil112Kayitlari(mahkumId)) Acil112Kayitlari.Add(a);
             foreach (var k in veri.MahkumKararlari(mahkumId)) KurulKararlari.Add(k);
 
             // İstatistikler
@@ -180,6 +182,11 @@ namespace KKDS.ViewModels
                 birlesik.Add((p.DegerlendirmeTarihi, "Psikolog", p.OncekiDurumaGore, $"{p.RuhHali} · agresyon {p.AgresyonDuzeyi}"));
             foreach (var r in veri.MahkumRevir(mahkumId))
                 birlesik.Add((r.KayitTarihi, "Revir", $"Uyku {r.UykuDurumu}", $"Stres {r.StresSeviyesi}/5 · {r.DavranisEtkisi} · {Kisalt(r.Aciklama, 60)}"));
+            foreach (var a in veri.MahkumAcil112Kayitlari(mahkumId))
+            {
+                var arayan = string.IsNullOrWhiteSpace(a.CagiranVardiya) ? "—" : a.CagiranVardiya;
+                birlesik.Add((a.CagriZamani, "112 Acil", $"Arayan: {arayan} · Olay: {a.Vardiya}", $"{Kisalt(a.Sikayet, 50)} · {Kisalt(a.Notlar, 60)}"));
+            }
 
             foreach (var x in birlesik.OrderByDescending(x => x.t).Take(15).OrderBy(x => x.t))
                 ZamanAkisi.Add(new ZamanAkisiOgesi { Tarih = x.t, Kaynak = x.kaynak, Baslik = x.baslik, Detay = x.detay });

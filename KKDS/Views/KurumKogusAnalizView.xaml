@@ -1,0 +1,147 @@
+<UserControl x:Class="KKDS.Views.KurumKogusAnalizView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <StackPanel MinWidth="860">
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Button Content="Verileri yenile" Command="{Binding YenileCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,8,0"/>
+            <TextBlock Text="{Binding SonYenileme}" FontSize="10" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <Border Background="#E0F2FE" BorderBrush="#7DD3FC" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,0,12"
+                Visibility="{Binding Yukleniyor, Converter={StaticResource BoolToVis}}">
+            <TextBlock Text="Hesaplanıyor…" FontSize="12" Foreground="#0369A1"/>
+        </Border>
+
+        <!-- Kurum geneli -->
+        <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock Text="Kurum geneli analiz" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,8"/>
+                <TextBlock Text="{Binding Genel.OzetMetin}" FontSize="12" Foreground="{StaticResource TextBrush}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                <UniformGrid Columns="4" Margin="0,0,0,12">
+                    <Border Style="{StaticResource CardBorder}" Margin="0,0,4,0">
+                        <StackPanel>
+                            <TextBlock Text="Aktif mahkum" FontSize="11" Foreground="{StaticResource TextMutedBrush}"/>
+                            <TextBlock Text="{Binding Genel.ToplamMahkum}" FontSize="26" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource CardBorder}" Margin="4,0,4,0">
+                        <StackPanel>
+                            <TextBlock Text="Blok / koğuş sayısı" FontSize="11" Foreground="{StaticResource TextMutedBrush}"/>
+                            <TextBlock FontSize="26" FontWeight="Bold">
+                                <Run Text="{Binding Genel.BlokSayisi, Mode=OneWay}"/><Run Text=" / "/><Run Text="{Binding Genel.KogusSayisi, Mode=OneWay}"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource CardBorder}" Margin="4,0,4,0">
+                        <StackPanel>
+                            <TextBlock Text="Son 30 gün olay / karar" FontSize="11" Foreground="{StaticResource TextMutedBrush}"/>
+                            <TextBlock FontSize="26" FontWeight="Bold">
+                                <Run Text="{Binding Genel.Son30GunOlay, Mode=OneWay}"/><Run Text=" / "/><Run Text="{Binding Genel.Son30GunKarar, Mode=OneWay}"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource CardBorder}" Margin="4,0,0,0">
+                        <StackPanel>
+                            <TextBlock Text="Yakın izlem" FontSize="11" Foreground="{StaticResource TextMutedBrush}"/>
+                            <TextBlock Text="{Binding Genel.YakinIzlemSayisi}" FontSize="26" FontWeight="Bold" Foreground="{StaticResource WarningBrush}"/>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+
+                <UniformGrid Columns="3">
+                    <Border Style="{StaticResource CardBorder}" Margin="0,0,6,0">
+                        <StackPanel>
+                            <TextBlock Text="Ortalama risk (kurum)" FontSize="11" Foreground="{StaticResource TextMutedBrush}"/>
+                            <TextBlock Text="{Binding Genel.OrtalamaRisk, StringFormat=F1}" FontSize="22" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource CardBorder}" Margin="6,0,6,0">
+                        <StackPanel>
+                            <TextBlock Text="En yüksek riskli mahkum" FontSize="11" Foreground="{StaticResource TextMutedBrush}"/>
+                            <TextBlock Text="{Binding Genel.EnYuksekRiskKod}" FontSize="16" FontWeight="Bold" TextWrapping="Wrap"/>
+                            <TextBlock FontSize="12" Foreground="{StaticResource TextMutedBrush}">
+                                <Run Text="Skor: "/><Run Text="{Binding Genel.EnYuksekRiskDeger, Mode=OneWay, StringFormat=F1}"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource CardBorder}" Margin="6,0,0,0">
+                        <StackPanel>
+                            <TextBlock Text="Son 30 günde en çok olay (koğuş)" FontSize="11" Foreground="{StaticResource TextMutedBrush}"/>
+                            <TextBlock Text="{Binding Genel.EnCokOlayKogusu}" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            <TextBlock FontSize="12" Foreground="{StaticResource DangerBrush}">
+                                <Run Text="{Binding Genel.EnCokOlayKogusuAdet, Mode=OneWay}"/><Run Text=" olay"/>
+                            </TextBlock>
+                            <TextBlock Text="En yüksek ortalama risk (koğuş)" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,8,0,0"/>
+                            <TextBlock Text="{Binding Genel.EnYuksekOrtRiskKogusu}" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            <TextBlock FontSize="12" Foreground="{StaticResource TextMutedBrush}">
+                                <Run Text="Ort.: "/><Run Text="{Binding Genel.EnYuksekOrtRiskDeger, Mode=OneWay, StringFormat=F1}"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+            </StackPanel>
+        </Border>
+
+        <!-- Blok özeti -->
+        <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock Text="Blok bazlı özet" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock Text="Her satır bir bloktaki mahkum, koğuş çeşitliliği ve son 30 gün olay/karar özetidir." FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                <DataGrid ItemsSource="{Binding BlokOzet}" MaxHeight="280">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Blok" Binding="{Binding Blok}" Width="*" MinWidth="120"/>
+                        <DataGridTextColumn Header="Mahkum" Binding="{Binding MahkumSayisi}" Width="Auto"/>
+                        <DataGridTextColumn Header="Koğuş adedi" Binding="{Binding KogusSayisi}" Width="Auto"/>
+                        <DataGridTextColumn Header="30g olay" Binding="{Binding Son30GunOlay}" Width="Auto"/>
+                        <DataGridTextColumn Header="30g karar" Binding="{Binding Son30GunKarar}" Width="Auto"/>
+                        <DataGridTextColumn Header="Ort. risk" Binding="{Binding OrtalamaRisk, StringFormat=F1}" Width="Auto"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </StackPanel>
+        </Border>
+
+        <!-- Koğuş analizi -->
+        <Border Style="{StaticResource CardBorder}">
+            <StackPanel>
+                <TextBlock Text="Koğuş bazlı analiz" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock Text="Blok ve koğuş numarasına göre gruplanmış özet. Olay/mahkum: son 30 günde kişi başına düşen olay sayısı." FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                <DataGrid ItemsSource="{Binding KogusAnaliz}" MaxHeight="420">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Blok" Binding="{Binding Blok}" Width="*" MinWidth="100"/>
+                        <DataGridTextColumn Header="Koğuş" Binding="{Binding Kogus}" Width="*" MinWidth="100"/>
+                        <DataGridTextColumn Header="Mahkum" Binding="{Binding MahkumSayisi}" Width="Auto"/>
+                        <DataGridTextColumn Header="30g olay" Binding="{Binding Son30GunOlay}" Width="Auto"/>
+                        <DataGridTextColumn Header="30g karar" Binding="{Binding Son30GunKarar}" Width="Auto"/>
+                        <DataGridTextColumn Header="Olay/mahkum" Binding="{Binding OlayBasiMahkum, StringFormat=F2}" Width="Auto"/>
+                        <DataGridTextColumn Header="Ort. risk" Binding="{Binding OrtalamaRisk, StringFormat=F1}" Width="Auto"/>
+                        <DataGridTextColumn Header="En yük. risk" Binding="{Binding EnYuksekRisk, StringFormat=F1}" Width="Auto"/>
+                        <DataGridTextColumn Header="Y. izlem" Binding="{Binding YakinIzlemSayisi}" Width="Auto"/>
+                        <DataGridTextColumn Header="En riskli kod" Binding="{Binding EnRiskliMahkumKodu}" Width="Auto" MinWidth="90"/>
+                        <DataGridTemplateColumn Header="" Width="Auto">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Content="Detay"
+                                            Command="{Binding DataContext.DetayCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding EnRiskliMahkumId}">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource SmallButton}">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding EnRiskliMahkumId}" Value="0">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

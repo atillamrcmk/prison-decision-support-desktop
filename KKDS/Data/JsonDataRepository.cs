@@ -22,6 +22,7 @@ namespace KKDS.Data
         private List<PsikologDegerlendirme> _psikologlar = new();
         private List<RevirKaydi> _revirler = new();
         private List<KurulKarari> _kararlar = new();
+        private List<Acil112CagriKaydi> _acil112 = new();
         private List<Kullanici> _kullanicilar = new();
 
         public string VeriKokYolu { get; private set; } = "";
@@ -55,6 +56,9 @@ namespace KKDS.Data
 
         public IReadOnlyList<Kullanici> KullanicilarListesi => _kullanicilar.AsReadOnly();
 
+        public IReadOnlyList<Acil112CagriKaydi> Acil112CagriKayitlari =>
+            _acil112.Where(a => a.AktifMi && !a.IsDemoData).ToList().AsReadOnly();
+
         private JsonDataRepository()
         {
             _jsonOpt = new JsonSerializerOptions
@@ -78,7 +82,7 @@ namespace KKDS.Data
 
         private void EnsureDirectories()
         {
-            string[] dirs = { "psikolog", "revir", "disiplin", "kurul", "mahkumlar", "islenmis", "logs", "kullanicilar", "raporlar", "yedek" };
+            string[] dirs = { "psikolog", "revir", "disiplin", "kurul", "acil112", "mahkumlar", "islenmis", "logs", "kullanicilar", "raporlar", "yedek" };
             foreach (var d in dirs)
                 Directory.CreateDirectory(Path.Combine(VeriKokYolu, d));
         }
@@ -200,6 +204,7 @@ namespace KKDS.Data
             _psikologlar = LoadAll<PsikologDegerlendirme>("psikolog", ref ok, ref hata);
             _revirler = LoadAll<RevirKaydi>("revir", ref ok, ref hata);
             _kararlar = LoadAll<KurulKarari>("kurul", ref ok, ref hata);
+            _acil112 = LoadAll<Acil112CagriKaydi>("acil112", ref ok, ref hata);
             SonYuklemeOkunanDosyaSayisi = ok;
             SonYuklemeHataliDosyaSayisi = hata;
             SonVeriYuklemeZamani = DateTime.Now;
@@ -245,6 +250,7 @@ namespace KKDS.Data
             SilDemo("psikolog", j => JsonSerializer.Deserialize<PsikologDegerlendirme>(j, _jsonOpt)?.IsDemoData == true);
             SilDemo("revir", j => JsonSerializer.Deserialize<RevirKaydi>(j, _jsonOpt)?.IsDemoData == true);
             SilDemo("kurul", j => JsonSerializer.Deserialize<KurulKarari>(j, _jsonOpt)?.IsDemoData == true);
+            SilDemo("acil112", j => JsonSerializer.Deserialize<Acil112CagriKaydi>(j, _jsonOpt)?.IsDemoData == true);
 
             TumVerileriYukle();
             _log.KritikIslem(LogIslemTipleri.DemoTemizle, OturumBilgisi.Instance.KullaniciAdi, OturumBilgisi.Instance.Rol,
@@ -527,6 +533,16 @@ namespace KKDS.Data
         public List<RevirKaydi> MahkumRevir(int mid) =>
             _revirler.Where(r => r.AktifMi && r.MahkumId == mid).OrderByDescending(r => r.KayitTarihi).ToList();
 
+        public List<Acil112CagriKaydi> MahkumAcil112Kayitlari(int mid) =>
+            _acil112.Where(a => a.AktifMi && a.MahkumId == mid).OrderByDescending(a => a.CagriZamani).ToList();
+
+        public List<Acil112CagriKaydi> TumAcil112Kayitlari(bool demoDahil)
+        {
+            IEnumerable<Acil112CagriKaydi> q = _acil112.Where(a => a.AktifMi);
+            if (!demoDahil) q = q.Where(a => !a.IsDemoData);
+            return q.OrderByDescending(a => a.CagriZamani).ToList();
+        }
+
         public List<KurulKarari> MahkumKararlari(int mid) =>
             _kararlar.Where(k => k.AktifMi && k.MahkumId == mid).OrderByDescending(k => k.KararTarihi).ToList();
 
@@ -565,6 +581,53 @@ namespace KKDS.Data
             list.AddRange(rv);
             list.AddRange(ku);
             return list.OrderByDescending(k => k.OlusturmaZamani).ToList();
+        }
+
+        #endregion
+
+        #region Acil112 CRUD
+
+        public void Acil112Kaydet(Acil112CagriKaydi a)
+        {
+            if (a.Id == 0) a.Id = _acil112.Any() ? _acil112.Max(x => x.Id) + 1 : 1;
+            var mahkum = MahkumBulById(a.MahkumId);
+            if (mahkum != null)
+            {
+                a.MahkumKodu = mahkum.MahkumKodu;
+                if (string.IsNullOrWhiteSpace(a.MahkumAdSoyad))
+                    a.MahkumAdSoyad = mahkum.AdSoyad;
+            }
+
+            var existing = _acil112.FindIndex(x => x.KayitId == a.KayitId);
+            if (existing >= 0)
+            {
+                OturumBilgisi.Instance.MetaGuncelle(a);
+                _acil112[existing] = a;
+                _log.KritikIslem(LogIslemTipleri.KayitGuncelle, OturumBilgisi.Instance.KullaniciAdi, OturumBilgisi.Instance.Rol,
+                    "acil112", a.MahkumKodu, "112 acil yardım kaydı güncellendi");
+            }
+            else
+            {
+                OturumBilgisi.Instance.MetaDoldurYeni(a);
+                if (a.IsDemoData)
+                    DemoKayitMetaAta(a, Roller.Revir, "revir1");
+                _acil112.Add(a);
+                _log.KritikIslem(LogIslemTipleri.KayitOlustur, OturumBilgisi.Instance.KullaniciAdi, OturumBilgisi.Instance.Rol,
+                    "acil112", a.MahkumKodu, "112 acil yardım çağrısı kaydedildi");
+            }
+
+            SaveJson("acil112", $"acil112_{a.KayitId}.json", a);
+        }
+
+        public void Acil112SoftDelete(string kayitId)
+        {
+            var a = _acil112.FirstOrDefault(x => x.KayitId == kayitId);
+            if (a == null) return;
+            OturumBilgisi.Instance.MetaGuncelle(a);
+            a.AktifMi = false;
+            SaveJson("acil112", $"acil112_{a.KayitId}.json", a);
+            _log.KritikIslem(LogIslemTipleri.KayitPasif, OturumBilgisi.Instance.KullaniciAdi, OturumBilgisi.Instance.Rol,
+                "acil112", a.MahkumKodu, "112 acil yardım kaydı pasife alındı");
         }
 
         #endregion

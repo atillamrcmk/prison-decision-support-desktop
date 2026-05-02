@@ -78,18 +78,22 @@ namespace KKDS.ViewModels
                     break;
                 case Roller.Revir:
                     MenuItems.Add(M("Yeni Revir Kaydı", () => Navigate<RevirFormViewModel>("Yeni Revir Kaydı")));
+                    MenuItems.Add(M("112 Acil Yardım Kayıtları", () => Navigate<Acil112KayitViewModel>("112 Acil Yardım Kayıtları")));
                     MenuItems.Add(M("Geçmiş Revir Kayıtları", () => Navigate<RevirGecmisViewModel>("Geçmiş Revir Kayıtları")));
                     MenuItems.Add(M("Kurul Kararları", () => Navigate<KurulOnaylarViewModel>("Kurul Kararları")));
                     MenuItems.Add(M("Mahkum Ara", () => Navigate<MahkumAraViewModel>("Mahkum Ara")));
                     break;
                 case Roller.Disiplin:
                     MenuItems.Add(M("Yeni Olay Kaydı", () => Navigate<DisiplinFormViewModel>("Yeni Olay Kaydı")));
+                    MenuItems.Add(M("112 Acil Yardım Kayıtları", () => Navigate<Acil112KayitViewModel>("112 Acil Yardım Kayıtları")));
                     MenuItems.Add(M("Olay Kayıtları", () => Navigate<DisiplinGecmisViewModel>("Olay Kayıtları")));
                     MenuItems.Add(M("Kurul Kararları", () => Navigate<KurulOnaylarViewModel>("Kurul Kararları")));
                     MenuItems.Add(M("Mahkum Ara", () => Navigate<MahkumAraViewModel>("Mahkum Ara")));
                     break;
                 case Roller.Yonetici:
                     MenuItems.Add(M("Gösterge Paneli", DashboardGit));
+                    MenuItems.Add(M("Kurum ve Koğuş Analizi", () => Navigate(() => new KurumKogusAnalizViewModel(this), "Kurum ve Koğuş Analizi")));
+                    MenuItems.Add(M("112 Acil Yardım Kayıtları", () => Navigate<Acil112KayitViewModel>("112 Acil Yardım Kayıtları")));
                     MenuItems.Add(M("Mahkum Listesi", () => Navigate(() => new MahkumListeViewModel(this), "Mahkum Listesi")));
                     MenuItems.Add(M("Kurul Değerlendirme", () => Navigate(() => new KurulViewModel(this), "Kurul Değerlendirme")));
                     MenuItems.Add(M("Yeni Kurul Kararı", () => Navigate<KurulKarariFormViewModel>("Yeni Kurul Kararı")));
